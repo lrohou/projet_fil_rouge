@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.filrouge.ui.theme.FilRougeTheme
+import android.content.Intent
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +48,10 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     // Apply innerPadding so content does not overlap system bars
                     LoginForm(
-                        onClick = { /* Handle login click */ },
+                        onClick = {
+                            val intent = Intent(this, HomePage::class.java)
+                            startActivity(intent)
+                        },
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
