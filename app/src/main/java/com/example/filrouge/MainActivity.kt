@@ -23,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -38,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.filrouge.ui.theme.FilRougeTheme
 import android.content.Intent
+import androidx.compose.foundation.text.input.TextFieldState
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,16 +45,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FilRougeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    // Apply innerPadding so content does not overlap system bars
-                    LoginForm(
-                        onClick = {
-                            val intent = Intent(this, HomePage::class.java)
-                            startActivity(intent)
-                        },
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                LoginScreen(
+                    onNavigateToHome = { email ->
+                        val intent = Intent(this, HomePage::class.java).apply {
+                            putExtra("USER_EMAIL", email)
+                        }
+                        startActivity(intent)
+                    }
+                )
             }
         }
     }
@@ -62,14 +60,15 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LoginForm(
+    usernameState: TextFieldState,
+    passwordState: TextFieldState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val usernameState = rememberTextFieldState()
-    val passwordState = rememberTextFieldState()
-
     Column(
-        modifier = modifier.fillMaxSize().padding(60.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(60.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -97,8 +96,13 @@ fun LoginForm(
             lineLimits = TextFieldLineLimits.SingleLine,
             placeholder = { Text("Enter Password") }
         )
-        Text("Forgot your password?", fontSize = 10.sp, color = Color(100,100,100),textAlign = TextAlign.End,
-            modifier = Modifier.fillMaxWidth())
+        Text(
+            "Forgot your password?",
+            fontSize = 10.sp,
+            color = Color(100, 100, 100),
+            textAlign = TextAlign.End,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(Modifier.size(16.dp))
 
@@ -108,19 +112,41 @@ fun LoginForm(
 
         Spacer(Modifier.size(72.dp))
 
-        Text(buildAnnotatedString {
-            append("No account yet? ")
-            withLink(
-                LinkAnnotation.Url(
-                    "https://youtu.be/dQw4w9WgXcQ?si=-5jJOXGnXRi6VKp_",
-                    TextLinkStyles(style = SpanStyle(color = Color.Blue))
-                )
-            ) {
-                append("Click here ")
-            }
-            append("to sign up.")
-        },
-            fontSize = 14.sp)
+        Text(
+            buildAnnotatedString {
+                append("No account yet? ")
+                withLink(
+                    LinkAnnotation.Url(
+                        "https://youtu.be/dQw4w9WgXcQ?si=-5jJOXGnXRi6VKp_",
+                        TextLinkStyles(style = SpanStyle(color = Color.Blue))
+                    )
+                ) {
+                    append("Click here ")
+                }
+                append("to sign up.")
+            },
+            fontSize = 14.sp
+        )
+    }
+}
+
+@Composable
+fun LoginScreen(
+    onNavigateToHome: (email: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val usernameState = rememberTextFieldState()
+    val passwordState = rememberTextFieldState()
+
+    Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
+        LoginForm(
+            usernameState = usernameState,
+            passwordState = passwordState,
+            onClick = {
+                onNavigateToHome(usernameState.text.toString())
+            },
+            modifier = Modifier.padding(innerPadding)
+        )
     }
 }
 
@@ -128,6 +154,13 @@ fun LoginForm(
 @Composable
 fun LoginFormPreview() {
     FilRougeTheme {
-        LoginForm(onClick = {})
+        val usernameState = rememberTextFieldState()
+        val passwordState = rememberTextFieldState()
+
+        LoginForm(
+            usernameState = usernameState,
+            passwordState = passwordState,
+            onClick = {}
+        )
     }
 }
