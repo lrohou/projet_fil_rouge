@@ -39,8 +39,23 @@ class HomePage : ComponentActivity() {
     }
 }
 
+data class Alarm(
+    val id: Int,
+    val time: String,
+    val subtitle: String,
+    val isEnabled: Boolean
+)
+
 @Composable
 fun Page() {
+    val alarms = remember {
+        mutableStateListOf(
+            Alarm(1, "07:00", "aujourd’hui", true),
+            Alarm(2, "08:30", "demain", false),
+            Alarm(3, "15:45", "demain", true)
+        )
+    }
+
     Scaffold(
         bottomBar = { BottomNavBar() }
     ) { innerPadding ->
@@ -121,13 +136,15 @@ fun Page() {
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            //cartes pour alarmes
-            AlarmCard(time = "07:00", subtitle = "aujourd’hui", initialChecked = true)
-            Spacer(modifier = Modifier.height(17.dp))
-            AlarmCard(time = "08:30", subtitle = "demain", initialChecked = false)
-            Spacer(modifier = Modifier.height(17.dp))
-            AlarmCard(time = "15:45", subtitle = "demain", initialChecked = true)
+            alarms.forEachIndexed { index, alarm ->
+                AlarmCard(
+                    alarm = alarm,
+                    onToggle = { isChecked ->
+                        alarms[index] = alarm.copy(isEnabled = isChecked)
+                    }
+                )
+                Spacer(modifier = Modifier.height(17.dp))
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -135,9 +152,10 @@ fun Page() {
 }
 
 @Composable
-fun AlarmCard(time: String, subtitle: String, initialChecked: Boolean) {
-    var isChecked by remember { mutableStateOf(initialChecked) }
-
+fun AlarmCard(
+    alarm: Alarm,
+    onToggle: (Boolean) -> Unit
+) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = CardBlue),
@@ -153,13 +171,12 @@ fun AlarmCard(time: String, subtitle: String, initialChecked: Boolean) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                //case de l'heure
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = Color.White
                 ) {
                     Text(
-                        text = time,
+                        text = alarm.time,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
@@ -170,16 +187,15 @@ fun AlarmCard(time: String, subtitle: String, initialChecked: Boolean) {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = subtitle,
+                    text = alarm.subtitle,
                     fontSize = 13.sp,
                     color = Color.Black
                 )
             }
 
-            //switch
             Switch(
-                checked = isChecked,
-                onCheckedChange = { isChecked = it }
+                checked = alarm.isEnabled,
+                onCheckedChange = onToggle
             )
         }
     }
