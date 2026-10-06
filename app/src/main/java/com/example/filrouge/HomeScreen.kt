@@ -18,6 +18,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.filrouge.ui.theme.FilRougeTheme
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 private val LightBlue = Color(0xFF90CAFF)
 private val CardBlue = Color(0xFFD0EBFF)
@@ -30,10 +39,25 @@ data class Alarm(
     val isEnabled: Boolean
 )
 
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "parametres")
+
 @Composable
 fun HomeScreen(
     onBack: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    //thème sombre ou clair
+    val darkThemeKey = booleanPreferencesKey("is_dark_theme")
+
+    val preferencesFlow = remember(context) {
+        context.dataStore.data.map { preferences ->
+            preferences[darkThemeKey] ?: false
+        }
+    }
+    val isDarkTheme by preferencesFlow.collectAsState(initial = false)
+
     val alarms = remember {
         mutableStateListOf(
             Alarm(1, "07:00", "aujourd’hui", true),
@@ -57,13 +81,30 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
                         .background(DarkBlue, CircleShape)
                 )
+
+                //switch choix du thème via datastore
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = if (isDarkTheme) "Sombre" else "Clair", fontSize = 12.sp)
+                    Switch(
+                        checked = isDarkTheme,
+                        onCheckedChange = { newValue ->
+                            scope.launch {
+                                context.dataStore.edit { preferences ->
+                                    preferences[darkThemeKey] = newValue
+                                }
+                            }
+                        }
+                    )
+                }
+
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -96,7 +137,9 @@ fun HomeScreen(
 
                     //icone +
                     IconButton(
-                        onClick = { /* Action au clic */ },
+                        onClick = {
+                            alarms.add(Alarm(alarms.size + 1, "09:00", "demain", true))
+                        },
                         modifier = Modifier
                             .size(56.dp)
                             .background(Color.White, CircleShape)
