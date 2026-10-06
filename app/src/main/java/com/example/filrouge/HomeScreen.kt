@@ -1,9 +1,5 @@
 package com.example.filrouge
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -27,18 +23,6 @@ private val LightBlue = Color(0xFF90CAFF)
 private val CardBlue = Color(0xFFD0EBFF)
 private val DarkBlue = Color(0xFF0066B2)
 
-class HomePage : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            FilRougeTheme {
-                Page()
-            }
-        }
-    }
-}
-
 data class Alarm(
     val id: Int,
     val time: String,
@@ -47,7 +31,9 @@ data class Alarm(
 )
 
 @Composable
-fun Page() {
+fun HomeScreen(
+    onBack: () -> Unit = {},
+) {
     val alarms = remember {
         mutableStateListOf(
             Alarm(1, "07:00", "aujourd’hui", true),
@@ -242,6 +228,6 @@ fun BottomNavBar() {
 @Composable
 fun PagePreview() {
     FilRougeTheme {
-        Page()
+        HomeScreen()
     }
 }

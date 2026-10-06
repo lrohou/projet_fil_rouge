@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.example.filrouge.ui.theme.FilRougeTheme
 import android.content.Intent
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,14 +46,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FilRougeTheme {
-                LoginScreen(
-                    onNavigateToHome = { email ->
-                        val intent = Intent(this, HomePage::class.java).apply {
-                            putExtra("USER_EMAIL", email)
-                        }
-                        startActivity(intent)
-                    }
-                )
+                AppNavHost()
             }
         }
     }
@@ -60,8 +54,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LoginForm(
-    usernameState: TextFieldState,
-    passwordState: TextFieldState,
+    username: String,
+    onUsernameChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -84,16 +80,18 @@ fun LoginForm(
         Spacer(Modifier.size(48.dp))
 
         TextField(
-            state = usernameState,
-            lineLimits = TextFieldLineLimits.SingleLine,
+            value = username,
+            onValueChange = onUsernameChange,
+            singleLine = true,
             placeholder = { Text("Enter Email Address") }
         )
 
         Spacer(Modifier.size(8.dp))
 
         TextField(
-            state = passwordState,
-            lineLimits = TextFieldLineLimits.SingleLine,
+            value = password,
+            onValueChange = onPasswordChange,
+            singleLine = true,
             placeholder = { Text("Enter Password") }
         )
         Text(
@@ -132,18 +130,20 @@ fun LoginForm(
 
 @Composable
 fun LoginScreen(
-    onNavigateToHome: (email: String) -> Unit,
-    modifier: Modifier = Modifier
+    onNavigateToHome: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: LoginViewModel = viewModel()
 ) {
-    val usernameState = rememberTextFieldState()
-    val passwordState = rememberTextFieldState()
-
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         LoginForm(
-            usernameState = usernameState,
-            passwordState = passwordState,
+            username = viewModel.username,
+            onUsernameChange = viewModel::onUsernameChange,
+            password = viewModel.password,
+            onPasswordChange = viewModel::onPasswordChange,
             onClick = {
-                onNavigateToHome(usernameState.text.toString())
+                if (viewModel.canSignIn()) {
+                    onNavigateToHome()
+                }
             },
             modifier = Modifier.padding(innerPadding)
         )
@@ -154,12 +154,11 @@ fun LoginScreen(
 @Composable
 fun LoginFormPreview() {
     FilRougeTheme {
-        val usernameState = rememberTextFieldState()
-        val passwordState = rememberTextFieldState()
-
         LoginForm(
-            usernameState = usernameState,
-            passwordState = passwordState,
+            username = "etudiant@uqac.ca",
+            onUsernameChange = {},
+            password = "password123",
+            onPasswordChange = {},
             onClick = {}
         )
     }
