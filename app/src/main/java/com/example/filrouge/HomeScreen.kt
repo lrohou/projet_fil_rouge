@@ -1,12 +1,15 @@
 package com.example.filrouge
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,220 +21,306 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.filrouge.ui.theme.FilRougeTheme
-import android.content.Context
-import androidx.compose.ui.platform.LocalContext
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-private val LightBlue = Color(0xFF90CAFF)
-private val CardBlue = Color(0xFFD0EBFF)
-private val DarkBlue = Color(0xFF0066B2)
-
-data class Alarm(
-    val id: Int,
-    val time: String,
-    val subtitle: String,
-    val isEnabled: Boolean
-)
-
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "parametres")
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
+    isDarkTheme: Boolean = false,
+    onToggleDarkTheme: (Boolean) -> Unit = {},
     onBack: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
-    val context = LocalContext.current
+    // État du pager : 3 pages (Contacts=0, Alarmes=1, Paramètres=2)
+    val pagerState = rememberPagerState(
+        initialPage = 1, // On démarre sur la page Alarmes
+        pageCount = { 3 }
+    )
     val scope = rememberCoroutineScope()
 
-    //thème sombre ou clair
-    val darkThemeKey = booleanPreferencesKey("is_dark_theme")
+    // État pour afficher/masquer les notifications
+    var showNotifications by remember { mutableStateOf(false) }
 
-    val preferencesFlow = remember(context) {
-        context.dataStore.data.map { preferences ->
-            preferences[darkThemeKey] ?: false
-        }
-    }
-    val isDarkTheme by preferencesFlow.collectAsState(initial = false)
+    // État pour afficher la popup de nouvelle alarme
+    var showNewAlarmDialog by remember { mutableStateOf(false) }
 
+    // État pour la barre de recherche dans les paramètres
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Liste des alarmes (données fictives)
     val alarms = remember {
         mutableStateListOf(
-            Alarm(1, "07:00", "aujourd’hui", true),
-            Alarm(2, "08:30", "demain", false),
+            Alarm(1, "7:00", "aujourd'hui", true),
+            Alarm(2, "8:30", "demain", false),
             Alarm(3, "15:45", "demain", true)
         )
     }
 
+    // Liste des notifications (avec boutons accepter et refuser)
+    val notifications = remember {
+        mutableStateListOf(
+            AppNotification(
+                id = 1,
+                title = "Gabriel",
+                message = "souhaite se réveiller à 9:00 avec vous"
+            ),
+            AppNotification(
+                id = 2,
+                title = "Patrick B",
+                message = "souhaite devenir ami avec vous"
+            )
+        )
+    }
+
+    BackHandler(enabled = showNotifications) {
+        showNotifications = false
+    }
+
+    // Afficher la popup de nouvelle alarme si nécessaire
+    if (showNewAlarmDialog) {
+        NewAlarmDialog(
+            isDarkTheme = isDarkTheme,
+            onDismiss = { showNewAlarmDialog = false }
+        )
+    }
+
+    val backgroundColor = if (isDarkTheme) Color(0xFF121212) else Color.White
+    val navBarColor = if (isDarkTheme) Color(0xFF1E2A38) else NavBarBlue
+
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        containerColor = backgroundColor,
+        // Barre de navigation en bas
+        bottomBar = {
+            BottomNavBar(
+                currentPage = pagerState.currentPage,
+                navBarColor = navBarColor,
+                onPageSelected = { page ->
+                    scope.launch { pagerState.animateScrollToPage(page) }
+                }
+            )
+        }
     ) { innerPadding ->
-        Column(
+        // Conteneur principal avec la barre du haut
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(DarkBlue, CircleShape)
-                )
+            Column(modifier = Modifier.fillMaxSize()) {
 
-                //switch choix du thème via datastore
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = if (isDarkTheme) "Sombre" else "Clair", fontSize = 12.sp)
-                    Switch(
-                        checked = isDarkTheme,
-                        onCheckedChange = { newValue ->
-                            scope.launch {
-                                context.dataStore.edit { preferences ->
-                                    preferences[darkThemeKey] = newValue
-                                }
-                            }
-                        }
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(DarkBlue, RoundedCornerShape(12.dp))
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            //box pour nouvelle alarme
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = LightBlue),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+                // === Barre du haut (profil + notifications) ===
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Nouvelle\nAlarme",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        lineHeight = 32.sp
-                    )
-
-                    //icone +
+                    // Icône profil (clic -> page profil)
                     IconButton(
-                        onClick = {
-                            alarms.add(Alarm(alarms.size + 1, "09:00", "demain", true))
-                        },
+                        onClick = onNavigateToProfile,
                         modifier = Modifier
-                            .size(56.dp)
-                            .background(Color.White, CircleShape)
+                            .size(48.dp)
+                            .background(DarkBlue, CircleShape)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.plus),
-                            contentDescription = "Ajouter une alarme",
+                            painter = painterResource(id = R.drawable.ic_person),
+                            contentDescription = "Profil",
                             modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    // Barre de recherche (uniquement sur la page Paramètres, modifiable par l'utilisateur)
+                    if (pagerState.currentPage == 2) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = {
+                                Text(
+                                    "recherche ...",
+                                    fontSize = 13.sp,
+                                    color = if (isDarkTheme) Color.LightGray else Color.Gray
+                                )
+                            },
+                            singleLine = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 8.dp)
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = if (isDarkTheme) Color(0xFF243447) else Color(0xFFE8F1F8),
+                                unfocusedContainerColor = if (isDarkTheme) Color(0xFF243447) else Color(0xFFE8F1F8),
+                                focusedTextColor = if (isDarkTheme) Color.White else Color.Black,
+                                unfocusedTextColor = if (isDarkTheme) Color.White else Color.Black,
+                                focusedBorderColor = DarkBlue,
+                                unfocusedBorderColor = Color(0xFF90CAFF)
+                            )
+                        )
+                    }
+
+                    // Icône notifications (clic -> afficher/masquer)
+                    IconButton(
+                        onClick = { showNotifications = !showNotifications },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(DarkBlue, RoundedCornerShape(12.dp))
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_bell),
+                            contentDescription = "Notifications",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                // === Pager horizontal (swipe entre les 3 pages) ===
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize()
+                ) { page ->
+                    when (page) {
+                        0 -> ContactsPageContent(isDarkTheme = isDarkTheme)
+                        1 -> AlarmPageContent(
+                            alarms = alarms,
+                            isDarkTheme = isDarkTheme,
+                            onToggle = { index, isChecked ->
+                                alarms[index] = alarms[index].copy(isEnabled = isChecked)
+                            },
+                            onNewAlarmClick = { showNewAlarmDialog = true }
+                        )
+                        2 -> SettingsPageContent(
+                            isDarkTheme = isDarkTheme,
+                            onToggleDarkTheme = onToggleDarkTheme
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(color = Color.Gray, thickness = 1.dp)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Alarmes en cours",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-            alarms.forEachIndexed { index, alarm ->
-                AlarmCard(
-                    alarm = alarm,
-                    onToggle = { isChecked ->
-                        alarms[index] = alarm.copy(isEnabled = isChecked)
-                    }
+            // === Popup de notifications (affichée par-dessus) ===
+            if (showNotifications) {
+                NotificationDropdown(
+                    notifications = notifications,
+                    onAccept = { notif -> notifications.remove(notif) },
+                    onRefuse = { notif -> notifications.remove(notif) },
+                    onDismiss = { showNotifications = false }
                 )
-                Spacer(modifier = Modifier.height(17.dp))
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
+// Dropdown des notifications
 @Composable
-fun AlarmCard(
-    alarm: Alarm,
-    onToggle: (Boolean) -> Unit
+fun BoxScope.NotificationDropdown(
+    notifications: List<AppNotification>,
+    onAccept: (AppNotification) -> Unit,
+    onRefuse: (AppNotification) -> Unit,
+    onDismiss: () -> Unit
 ) {
+    // Fond semi-transparent pour fermer en cliquant à côté
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(onClick = onDismiss)
+    )
+
+    // Carte de notifications positionnée en haut à droite
     Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBlue),
-        modifier = Modifier.fillMaxWidth()
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkBlue),
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(top = 72.dp, end = 16.dp)
+            .width(280.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(14.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color.White
-                ) {
-                    Text(
-                        text = alarm.time,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
+            if (notifications.isEmpty()) {
                 Text(
-                    text = alarm.subtitle,
+                    text = "Aucune notification",
+                    color = Color.White,
                     fontSize = 13.sp,
-                    color = Color.Black
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
-            }
+            } else {
+                notifications.forEachIndexed { index, notif ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            // Titre en gras
+                            Text(
+                                text = notif.title,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                            // Message
+                            Text(
+                                text = notif.message,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp
+                            )
+                        }
 
-            Switch(
-                checked = alarm.isEnabled,
-                onCheckedChange = onToggle
-            )
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        // Boutons Accepter et Refuser
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Bouton Accepter
+                            IconButton(
+                                onClick = { onAccept(notif) },
+                                modifier = Modifier.size(30.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_check),
+                                    contentDescription = "Accepter",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            // Bouton Refuser
+                            IconButton(
+                                onClick = { onRefuse(notif) },
+                                modifier = Modifier.size(30.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_close),
+                                    contentDescription = "Refuser",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    if (index < notifications.size - 1) {
+                        HorizontalDivider(
+                            color = Color.White.copy(alpha = 0.4f),
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
+// Barre de navigation
 @Composable
-fun BottomNavBar() {
+fun BottomNavBar(
+    currentPage: Int = 1,
+    navBarColor: Color = NavBarBlue,
+    onPageSelected: (Int) -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -240,28 +329,37 @@ fun BottomNavBar() {
     ) {
         Surface(
             shape = RoundedCornerShape(20.dp),
-            color = LightBlue
+            color = navBarColor
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.group),
-                    contentDescription = "Groupe",
-                    modifier = Modifier.size(32.dp)
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.clock),
-                    contentDescription = "Alarmes",
-                    modifier = Modifier.size(36.dp)
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.settings),
-                    contentDescription = "Paramètres",
-                    modifier = Modifier.size(32.dp)
-                )
+                // Icône Contacts
+                IconButton(onClick = { onPageSelected(0) }) {
+                    Image(
+                        painter = painterResource(id = R.drawable.group),
+                        contentDescription = "Contacts",
+                        modifier = Modifier.size(if (currentPage == 0) 40.dp else 28.dp)
+                    )
+                }
+                // Icône Alarmes
+                IconButton(onClick = { onPageSelected(1) }) {
+                    Image(
+                        painter = painterResource(id = R.drawable.clock),
+                        contentDescription = "Alarmes",
+                        modifier = Modifier.size(if (currentPage == 1) 40.dp else 28.dp)
+                    )
+                }
+                // Icône Paramètres
+                IconButton(onClick = { onPageSelected(2) }) {
+                    Image(
+                        painter = painterResource(id = R.drawable.settings),
+                        contentDescription = "Paramètres",
+                        modifier = Modifier.size(if (currentPage == 2) 40.dp else 28.dp)
+                    )
+                }
             }
         }
     }

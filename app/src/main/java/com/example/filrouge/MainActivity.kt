@@ -40,13 +40,47 @@ import android.content.Intent
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+
+// DataStore pour sauvegarder les paramètres de l'application
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "parametres")
+val DarkThemeKey = booleanPreferencesKey("is_dark_theme")
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            FilRougeTheme {
-                AppNavHost()
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+
+            //lecture de la préférence du thème dans le DataStore
+            val isDarkTheme by context.dataStore.data.map { preferences ->
+                preferences[DarkThemeKey] ?: false
+            }.collectAsState(initial = false)
+
+            FilRougeTheme(darkTheme = isDarkTheme, dynamicColor = false) {
+                AppNavHost(
+                    isDarkTheme = isDarkTheme,
+                    onToggleDarkTheme = { newValue ->
+                        scope.launch {
+                            context.dataStore.edit { preferences ->
+                                preferences[DarkThemeKey] = newValue
+                            }
+                        }
+                    }
+                )
             }
         }
     }
