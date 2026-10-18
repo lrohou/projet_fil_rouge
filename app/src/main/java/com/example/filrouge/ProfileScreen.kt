@@ -14,14 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.filrouge.ui.theme.FilRougeTheme
 
 // Page profil de l'utilisateur
 @Composable
 fun ProfileScreen(
     isDarkTheme: Boolean = false,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val bgColor = if (isDarkTheme) Color(0xFF121212) else Color.White
     val textColor = if (isDarkTheme) Color.White else Color.Black
@@ -133,7 +136,7 @@ fun ProfileScreen(
 
             // Bouton de déconnexion
             Button(
-                onClick = onBack,
+                onClick = onLogout,
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -168,6 +171,18 @@ fun ProfileInfoRow(label: String, value: String, textColor: Color = Color.Black)
             text = value,
             fontSize = 14.sp,
             color = textColor
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfilePreview() {
+    FilRougeTheme {
+        ProfileScreen(
+            isDarkTheme = false,
+            onBack = {},
+            onLogout = {}
         )
     }
 }

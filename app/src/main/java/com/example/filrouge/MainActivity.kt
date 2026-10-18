@@ -1,5 +1,7 @@
 package com.example.filrouge
 
+import LoginViewModel
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -41,6 +43,9 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 import android.content.Context
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -52,12 +57,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 // DataStore pour sauvegarder les paramètres de l'application
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "parametres")
 val DarkThemeKey = booleanPreferencesKey("is_dark_theme")
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("FlowOperatorInvokedInComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -92,7 +100,12 @@ fun LoginForm(
     onUsernameChange: (String) -> Unit,
     password: String,
     onPasswordChange: (String) -> Unit,
+    isLoading: Boolean,
+    errorMessage: String?,
+    infoMessage: String?,
     onClick: () -> Unit,
+    onForgotPassword: () -> Unit,
+    onSignUpClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -107,8 +120,7 @@ fun LoginForm(
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo de l'app",
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
+            modifier = Modifier.clip(RoundedCornerShape(16.dp))
         )
 
         Spacer(Modifier.size(48.dp))
@@ -117,6 +129,7 @@ fun LoginForm(
             value = username,
             onValueChange = onUsernameChange,
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             placeholder = { Text("Enter Email Address") }
         )
 
@@ -126,20 +139,35 @@ fun LoginForm(
             value = password,
             onValueChange = onPasswordChange,
             singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             placeholder = { Text("Enter Password") }
         )
+
         Text(
             "Forgot your password?",
             fontSize = 10.sp,
             color = Color(100, 100, 100),
             textAlign = TextAlign.End,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onForgotPassword)
         )
+
+        Spacer(Modifier.size(8.dp))
+
+        errorMessage?.let {
+            Text(it, color = Color(150, 0, 0), fontSize = 12.sp)
+        }
+        infoMessage?.let {
+            Text(it, fontSize = 12.sp)
+        }
 
         Spacer(Modifier.size(16.dp))
 
-        Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Sign In")
+        Button(onClick = onClick, enabled = !isLoading, modifier = Modifier.fillMaxWidth()) {
+            if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+            else Text("Sign In")
         }
 
         Spacer(Modifier.size(72.dp))
@@ -148,9 +176,10 @@ fun LoginForm(
             buildAnnotatedString {
                 append("No account yet? ")
                 withLink(
-                    LinkAnnotation.Url(
-                        "https://youtu.be/dQw4w9WgXcQ?si=-5jJOXGnXRi6VKp_",
-                        TextLinkStyles(style = SpanStyle(color = Color.Blue))
+                    LinkAnnotation.Clickable(
+                        tag = "signup",
+                        styles = TextLinkStyles(style = SpanStyle(color = Color.Blue)),
+                        linkInteractionListener = { onSignUpClick() }
                     )
                 ) {
                     append("Click here ")
@@ -165,6 +194,7 @@ fun LoginForm(
 @Composable
 fun LoginScreen(
     onNavigateToHome: () -> Unit,
+    onNavigateToSignUp: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = viewModel()
 ) {
@@ -174,11 +204,12 @@ fun LoginScreen(
             onUsernameChange = viewModel::onUsernameChange,
             password = viewModel.password,
             onPasswordChange = viewModel::onPasswordChange,
-            onClick = {
-                if (viewModel.canSignIn()) {
-                    onNavigateToHome()
-                }
-            },
+            isLoading = viewModel.isLoading,
+            errorMessage = viewModel.errorMessage,
+            infoMessage = viewModel.infoMessage,
+            onClick = { viewModel.signIn(onNavigateToHome) },
+            onForgotPassword = viewModel::resetPassword,
+            onSignUpClick = onNavigateToSignUp,
             modifier = Modifier.padding(innerPadding)
         )
     }
@@ -193,7 +224,12 @@ fun LoginFormPreview() {
             onUsernameChange = {},
             password = "password123",
             onPasswordChange = {},
-            onClick = {}
+            isLoading = false,
+            errorMessage = null,
+            infoMessage = null,
+            onClick = {},
+            onForgotPassword = {},
+            onSignUpClick = {}
         )
     }
 }

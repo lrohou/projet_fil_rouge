@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "831423879945",
+    "project_id": "soclock",
+    "storage_bucket": "soclock.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831423879945:android:b4e54ec209f6af6b1591d8",
+        "android_client_info": {
+          "package_name": "com.example.filrouge"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "831423879945-5cfcdq15prhvl0sc2rfmltq74j8g3hf5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCaaVVIclvKC8Zzp1oXo6To_6eaoQFLZBM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "831423879945-5cfcdq15prhvl0sc2rfmltq74j8g3hf5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
