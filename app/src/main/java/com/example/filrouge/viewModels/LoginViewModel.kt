@@ -1,3 +1,4 @@
+import android.util.Log
 import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +39,22 @@ class LoginViewModel(
                 .onFailure { errorMessage = it.toAuthMessage() }
             isLoading = false
         }
+    }
+
+    fun signInWithGoogle(idToken: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            isLoading = true
+            repo.signInWithGoogle(idToken)
+                .onSuccess { onSuccess() }
+                .onFailure {
+                    errorMessage = it.toAuthMessage()
+                }
+            isLoading = false
+        }
+    }
+
+    fun onGoogleError() {
+        errorMessage = "Connexion Google impossible"
     }
 
     fun resetPassword() {

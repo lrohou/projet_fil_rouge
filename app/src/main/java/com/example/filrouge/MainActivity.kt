@@ -46,6 +46,7 @@ import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -59,6 +60,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 
 // DataStore pour sauvegarder les paramètres de l'application
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "parametres")
@@ -104,6 +112,7 @@ fun LoginForm(
     errorMessage: String?,
     infoMessage: String?,
     onClick: () -> Unit,
+    onGoogleClick: () -> Unit,
     onForgotPassword: () -> Unit,
     onSignUpClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -169,6 +178,15 @@ fun LoginForm(
             if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
             else Text("Sign In")
         }
+        Spacer(Modifier.size(8.dp))
+
+        OutlinedButton(
+            onClick = onGoogleClick,
+            enabled = !isLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Continuer avec Google")
+        }
 
         Spacer(Modifier.size(72.dp))
 
@@ -198,6 +216,37 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val onGoogleClick: () -> Unit = {
+        scope.launch {
+            try {
+                val option = GetSignInWithGoogleOption
+                    .Builder(context.getString(R.string.default_web_client_id))
+                    .build()
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(option)
+                    .build()
+
+                val result = CredentialManager.create(context).getCredential(context, request)
+                val credential = result.credential
+
+                if (credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                ) {
+                    val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+                    viewModel.signInWithGoogle(idToken, onNavigateToHome)
+                } else {
+                    viewModel.onGoogleError()
+                }
+            } catch (e: GetCredentialCancellationException) {
+            } catch (e: GetCredentialException) {
+                viewModel.onGoogleError()
+            }
+        }
+    }
+
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         LoginForm(
             username = viewModel.username,
@@ -208,6 +257,7 @@ fun LoginScreen(
             errorMessage = viewModel.errorMessage,
             infoMessage = viewModel.infoMessage,
             onClick = { viewModel.signIn(onNavigateToHome) },
+            onGoogleClick = onGoogleClick,
             onForgotPassword = viewModel::resetPassword,
             onSignUpClick = onNavigateToSignUp,
             modifier = Modifier.padding(innerPadding)
@@ -229,6 +279,7 @@ fun LoginFormPreview() {
             infoMessage = null,
             onClick = {},
             onForgotPassword = {},
+            onGoogleClick = {},
             onSignUpClick = {}
         )
     }

@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -31,6 +32,22 @@ class AuthRepository(
 
     suspend fun resetPassword(email: String): Result<Unit> = runCatching {
         auth.sendPasswordResetEmail(email).await()
+        Unit
+    }
+
+    suspend fun signInWithGoogle(idToken: String): Result<Unit> = runCatching {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val result = auth.signInWithCredential(credential).await()
+        val user = result.user!!
+
+        if (result.additionalUserInfo?.isNewUser == true) {
+            db.collection("users").document(user.uid).set(
+                mapOf(
+                    "displayName" to (user.displayName ?: ""),
+                    "email" to (user.email ?: "")
+                )
+            ).await()
+        }
         Unit
     }
 
