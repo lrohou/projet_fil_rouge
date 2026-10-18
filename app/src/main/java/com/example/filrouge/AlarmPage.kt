@@ -17,20 +17,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.filrouge.data.Alarm
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 
 // Couleurs utilisées dans toute l'application
 val LightBlue = Color(0xFFD0EBFF)
 val CardBlue = Color(0xFFD0EBFF)
 val DarkBlue = Color(0xFF0055A4)
 val NavBarBlue = Color(0xFFB8DEFF)
-
-// Modèle de données pour une alarme
-data class Alarm(
-    val id: Int,
-    val time: String,
-    val subtitle: String,
-    val isEnabled: Boolean
-)
 
 // Modèle de données pour une notification
 data class AppNotification(
@@ -44,7 +39,8 @@ data class AppNotification(
 fun AlarmPageContent(
     alarms: List<Alarm>,
     isDarkTheme: Boolean = false,
-    onToggle: (Int, Boolean) -> Unit,
+    onToggle: (Alarm, Boolean) -> Unit,
+    onDelete: (Alarm) -> Unit,
     onNewAlarmClick: () -> Unit
 ) {
     val cardColor = if (isDarkTheme) Color(0xFF1E2A38) else LightBlue
@@ -108,13 +104,19 @@ fun AlarmPageContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Liste des alarmes
-        alarms.forEachIndexed { index, alarm ->
-            AlarmCard(
-                alarm = alarm,
-                isDarkTheme = isDarkTheme,
-                onToggle = { isChecked -> onToggle(index, isChecked) }
-            )
+        if (alarms.isEmpty()) {
+            Text("Aucune alarme pour l'instant", color = textColor, fontSize = 14.sp)
+        }
+
+        alarms.forEach { alarm ->
+            key(alarm.id) {
+                AlarmCard(
+                    alarm = alarm,
+                    isDarkTheme = isDarkTheme,
+                    onToggle = { checked -> onToggle(alarm, checked) },
+                    onDelete = { onDelete(alarm) }
+                )
+            }
             Spacer(modifier = Modifier.height(17.dp))
         }
 
@@ -127,7 +129,8 @@ fun AlarmPageContent(
 fun AlarmCard(
     alarm: Alarm,
     isDarkTheme: Boolean = false,
-    onToggle: (Boolean) -> Unit
+    onToggle: (Boolean) -> Unit,
+    onDelete: () -> Unit
 ) {
     val cardColor = if (isDarkTheme) Color(0xFF1E2A38) else CardBlue
     val timeBg = if (isDarkTheme) Color(0xFF2C3E50) else Color.White
@@ -167,24 +170,24 @@ fun AlarmCard(
                     color = subtitleColor
                 )
             }
-            // Interrupteur on/off
-            Switch(
-                checked = alarm.isEnabled,
-                onCheckedChange = onToggle
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Supprimer", tint = subtitleColor)
+                }
+                Switch(checked = alarm.enabled, onCheckedChange = onToggle)
+            }
         }
     }
 }
 
-// Popup de création d'alarme fictive
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewAlarmDialog(
     isDarkTheme: Boolean = false,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onConfirm: (hour: Int, minute: Int) -> Unit
 ) {
-    // États locaux pour les champs du formulaire
-    var hour by remember { mutableStateOf("07") }
-    var minute by remember { mutableStateOf("00") }
+    val timeState = rememberTimePickerState(initialHour = 7, initialMinute = 0, is24Hour = true)
     val dialogBg = if (isDarkTheme) Color(0xFF1E2A38) else Color.White
     val textColor = if (isDarkTheme) Color.White else Color.Black
 
@@ -192,73 +195,19 @@ fun NewAlarmDialog(
         onDismissRequest = onDismiss,
         containerColor = dialogBg,
         shape = RoundedCornerShape(24.dp),
-        title = {
-            Text(
-                text = "Nouvelle Alarme",
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
-                color = textColor
-            )
-        },
+        title = { Text("Nouvelle Alarme", fontWeight = FontWeight.Bold, fontSize = 22.sp, color = textColor) },
         text = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Sélection de l'heure
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Champ heure
-                    OutlinedTextField(
-                        value = hour,
-                        onValueChange = { if (it.length <= 2) hour = it },
-                        label = { Text("HH") },
-                        singleLine = true,
-                        modifier = Modifier.width(80.dp)
-                    )
-                    Text(
-                        text = " : ",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor
-                    )
-                    // Champ minute
-                    OutlinedTextField(
-                        value = minute,
-                        onValueChange = { if (it.length <= 2) minute = it },
-                        label = { Text("MM") },
-                        singleLine = true,
-                        modifier = Modifier.width(80.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Label
-                OutlinedTextField(
-                    value = "demain",
-                    onValueChange = {},
-                    label = { Text("Jour") },
-                    singleLine = true,
-                    readOnly = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                TimePicker(state = timeState)
             }
         },
-        // Bouton de confirmation (ne fait rien de réel)
         confirmButton = {
             Button(
-                onClick = onDismiss,
+                onClick = { onConfirm(timeState.hour, timeState.minute) },
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                 shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Créer", color = Color.White)
-            }
+            ) { Text("Créer", color = Color.White) }
         },
-        // Bouton d'annulation
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Annuler", color = if (isDarkTheme) Color(0xFF90CAFF) else DarkBlue)

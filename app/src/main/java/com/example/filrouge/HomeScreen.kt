@@ -20,7 +20,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.filrouge.ui.theme.FilRougeTheme
+import com.example.filrouge.viewModels.AlarmViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -29,7 +31,8 @@ fun HomeScreen(
     isDarkTheme: Boolean = false,
     onToggleDarkTheme: (Boolean) -> Unit = {},
     onBack: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {} ,
+    alarmViewModel: AlarmViewModel = viewModel()
 ) {
     // État du pager : 3 pages (Contacts=0, Alarmes=1, Paramètres=2)
     val pagerState = rememberPagerState(
@@ -47,12 +50,16 @@ fun HomeScreen(
     // État pour la barre de recherche dans les paramètres
     var searchQuery by remember { mutableStateOf("") }
 
-    // Liste des alarmes (données fictives)
-    val alarms = remember {
-        mutableStateListOf(
-            Alarm(1, "7:00", "aujourd'hui", true),
-            Alarm(2, "8:30", "demain", false),
-            Alarm(3, "15:45", "demain", true)
+    val alarms by alarmViewModel.alarms.collectAsState()
+
+    if (showNewAlarmDialog) {
+        NewAlarmDialog(
+            isDarkTheme = isDarkTheme,
+            onDismiss = { showNewAlarmDialog = false },
+            onConfirm = { hour, minute ->
+                alarmViewModel.createAlarm(hour, minute)
+                showNewAlarmDialog = false
+            }
         )
     }
 
@@ -76,11 +83,14 @@ fun HomeScreen(
         showNotifications = false
     }
 
-    // Afficher la popup de nouvelle alarme si nécessaire
     if (showNewAlarmDialog) {
         NewAlarmDialog(
             isDarkTheme = isDarkTheme,
-            onDismiss = { showNewAlarmDialog = false }
+            onDismiss = { showNewAlarmDialog = false },
+            onConfirm = { hour, minute ->
+                alarmViewModel.createAlarm(hour, minute)
+                showNewAlarmDialog = false
+            }
         )
     }
 
@@ -184,9 +194,8 @@ fun HomeScreen(
                         1 -> AlarmPageContent(
                             alarms = alarms,
                             isDarkTheme = isDarkTheme,
-                            onToggle = { index, isChecked ->
-                                alarms[index] = alarms[index].copy(isEnabled = isChecked)
-                            },
+                            onToggle = { alarm, checked -> alarmViewModel.setEnabled(alarm, checked) },
+                            onDelete = { alarm -> alarmViewModel.delete(alarm) },
                             onNewAlarmClick = { showNewAlarmDialog = true }
                         )
                         2 -> SettingsPageContent(
