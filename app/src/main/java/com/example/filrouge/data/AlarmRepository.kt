@@ -34,16 +34,50 @@ class AlarmRepository(
         awaitClose { registration.remove() }
     }
 
-    suspend fun createAlarm(hour: Int, minute: Int): Result<Unit> = runCatching {
+    suspend fun createAlarm(
+        hour: Int,
+        minute: Int,
+        name: String,
+        days: List<Int>,
+        soundName: String,
+        vibrate: Boolean
+    ): Result<String> = runCatching {
         val uid = auth.currentUser?.uid ?: error("Utilisateur non connecté")
-        alarms.document().set(
+        val docRef = alarms.document()
+        docRef.set(
             mapOf(
                 "ownerId" to uid,
                 "hour" to hour,
                 "minute" to minute,
                 "enabled" to true,
+                "name" to name,
+                "days" to days,
+                "soundName" to soundName,
+                "vibrate" to vibrate,
                 "participantIds" to listOf(uid),
                 "createdAt" to FieldValue.serverTimestamp()
+            )
+        ).await()
+        docRef.id
+    }
+
+    suspend fun updateAlarm(
+        alarmId: String,
+        hour: Int,
+        minute: Int,
+        name: String,
+        days: List<Int>,
+        soundName: String,
+        vibrate: Boolean
+    ): Result<Unit> = runCatching {
+        alarms.document(alarmId).update(
+            mapOf(
+                "hour" to hour,
+                "minute" to minute,
+                "name" to name,
+                "days" to days,
+                "soundName" to soundName,
+                "vibrate" to vibrate
             )
         ).await()
         Unit

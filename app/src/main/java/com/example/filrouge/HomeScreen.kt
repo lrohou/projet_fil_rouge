@@ -15,12 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.filrouge.data.Alarm
 import com.example.filrouge.ui.theme.FilRougeTheme
 import com.example.filrouge.viewModels.AlarmViewModel
 import kotlinx.coroutines.launch
@@ -34,6 +36,8 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit = {} ,
     alarmViewModel: AlarmViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+
     // État du pager : 3 pages (Contacts=0, Alarmes=1, Paramètres=2)
     val pagerState = rememberPagerState(
         initialPage = 1, // On démarre sur la page Alarmes
@@ -47,18 +51,36 @@ fun HomeScreen(
     // État pour afficher la popup de nouvelle alarme
     var showNewAlarmDialog by remember { mutableStateOf(false) }
 
+    // État pour l'alarme en cours d'édition (null = pas d'édition)
+    var editingAlarm by remember { mutableStateOf<Alarm?>(null) }
+
     // État pour la barre de recherche dans les paramètres
     var searchQuery by remember { mutableStateOf("") }
 
     val alarms by alarmViewModel.alarms.collectAsState()
 
+    // Dialog de création d'une nouvelle alarme
     if (showNewAlarmDialog) {
-        NewAlarmDialog(
+        AlarmEditDialog(
             isDarkTheme = isDarkTheme,
+            existingAlarm = null,
             onDismiss = { showNewAlarmDialog = false },
-            onConfirm = { hour, minute ->
-                alarmViewModel.createAlarm(hour, minute)
+            onConfirm = { hour, minute, name, days, soundName, vibrate ->
+                alarmViewModel.createAlarm(context, hour, minute, name, days, soundName, vibrate)
                 showNewAlarmDialog = false
+            }
+        )
+    }
+
+    // Dialog d'édition d'une alarme existante
+    editingAlarm?.let { alarm ->
+        AlarmEditDialog(
+            isDarkTheme = isDarkTheme,
+            existingAlarm = alarm,
+            onDismiss = { editingAlarm = null },
+            onConfirm = { hour, minute, name, days, soundName, vibrate ->
+                alarmViewModel.updateAlarm(context, alarm, hour, minute, name, days, soundName, vibrate)
+                editingAlarm = null
             }
         )
     }
@@ -81,17 +103,6 @@ fun HomeScreen(
 
     BackHandler(enabled = showNotifications) {
         showNotifications = false
-    }
-
-    if (showNewAlarmDialog) {
-        NewAlarmDialog(
-            isDarkTheme = isDarkTheme,
-            onDismiss = { showNewAlarmDialog = false },
-            onConfirm = { hour, minute ->
-                alarmViewModel.createAlarm(hour, minute)
-                showNewAlarmDialog = false
-            }
-        )
     }
 
     val backgroundColor = if (isDarkTheme) Color(0xFF121212) else Color.White
@@ -194,9 +205,10 @@ fun HomeScreen(
                         1 -> AlarmPageContent(
                             alarms = alarms,
                             isDarkTheme = isDarkTheme,
-                            onToggle = { alarm, checked -> alarmViewModel.setEnabled(alarm, checked) },
-                            onDelete = { alarm -> alarmViewModel.delete(alarm) },
-                            onNewAlarmClick = { showNewAlarmDialog = true }
+                            onToggle = { alarm, checked -> alarmViewModel.setEnabled(context, alarm, checked) },
+                            onDelete = { alarm -> alarmViewModel.delete(context, alarm) },
+                            onNewAlarmClick = { showNewAlarmDialog = true },
+                            onEditAlarm = { alarm -> editingAlarm = alarm }
                         )
                         2 -> SettingsPageContent(
                             isDarkTheme = isDarkTheme,

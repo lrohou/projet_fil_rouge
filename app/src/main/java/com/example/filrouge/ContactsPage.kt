@@ -17,18 +17,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Modèle de données pour un contact
+//modèle de données pour un contact
 data class Contact(
     val name: String,
     val alarmCount: Int
 )
 
-// Contenu de la page Contacts
+//contenu de la page contacts
 @Composable
 fun ContactsPageContent(
     isDarkTheme: Boolean = false
 ) {
-    // Liste fictive de contacts
+    //liste fictive de contacts
     val contacts = listOf(
         Contact("Gabriel", 1),
         Contact("Loan", 2),
@@ -48,7 +48,7 @@ fun ContactsPageContent(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Titre de la page
+        //titre de la page
         Text(
             text = "Contacts",
             fontSize = 28.sp,
@@ -59,7 +59,7 @@ fun ContactsPageContent(
                 .padding(bottom = 16.dp)
         )
 
-        // Liste des contacts
+        //liste des contacts
         contacts.forEach { contact ->
             ContactCard(contact = contact, isDarkTheme = isDarkTheme)
             Spacer(modifier = Modifier.height(12.dp))
@@ -67,7 +67,7 @@ fun ContactsPageContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Bouton "Nouveau contact"
+        //bouton "nouveau contact"
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
@@ -87,7 +87,7 @@ fun ContactsPageContent(
                         fontWeight = FontWeight.Bold,
                         color = textColor
                     )
-                    // Icône + dans un cercle bleu foncé
+                    //icône + dans un cercle bleu foncé
                     Box(
                         modifier = Modifier
                             .size(32.dp)
@@ -109,7 +109,7 @@ fun ContactsPageContent(
     }
 }
 
-// Carte individuelle d'un contact
+//carte individuelle d'un contact
 @Composable
 fun ContactCard(
     contact: Contact,
@@ -132,7 +132,7 @@ fun ContactCard(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icône de profil dans un cercle
+            //icône de profil dans un cercle
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -148,7 +148,7 @@ fun ContactCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Nom et nombre de réveils actifs
+            //nom et nombre de réveils actifs
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = contact.name,
@@ -163,7 +163,7 @@ fun ContactCard(
                 )
             }
 
-            // Icône horloge +
+            //icône horloge +
             Image(
                 painter = painterResource(id = R.drawable.plus),
                 contentDescription = "Ajouter alarme",
