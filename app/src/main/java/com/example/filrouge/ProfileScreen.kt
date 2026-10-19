@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,11 +19,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.filrouge.ui.theme.FilRougeTheme
+import com.example.filrouge.viewModels.ProfileUiState
+import com.example.filrouge.viewModels.ProfileViewModel
 
 // Page profil de l'utilisateur
 @Composable
 fun ProfileScreen(
+    isDarkTheme: Boolean = false,
+    viewModel: ProfileViewModel = viewModel(),
+    onBack: () -> Unit,
+    onLogout: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    ProfileContent(
+        uiState = uiState,
+        isDarkTheme = isDarkTheme,
+        onBack = onBack,
+        onLogout = onLogout
+    )
+}
+
+@Composable
+fun ProfileContent(
+    uiState: ProfileUiState,
     isDarkTheme: Boolean = false,
     onBack: () -> Unit,
     onLogout: () -> Unit
@@ -58,35 +81,49 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Grande icône de profil
+            //icône de profil
             Box(
                 modifier = Modifier
                     .size(100.dp)
                     .background(DarkBlue, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_person),
-                    contentDescription = "Photo de profil",
-                    modifier = Modifier.size(56.dp)
-                )
+                val initial = uiState.displayName.trim().take(1).uppercase()
+                if (initial.isNotEmpty()) {
+                    Text(
+                        text = initial,
+                        fontSize = 44.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_person),
+                        contentDescription = "Photo de profil",
+                        modifier = Modifier.size(56.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Nom de l'utilisateur
+            //nom du user
             Text(
-                text = "Utilisateur",
+                text = uiState.displayName.ifBlank { "Utilisateur" },
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = textColor
             )
 
-            Text(
-                text = "utilisateur@email.com",
-                fontSize = 14.sp,
-                color = subTextColor
-            )
+            //email du user
+            if (uiState.email.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = uiState.email,
+                    fontSize = 14.sp,
+                    color = subTextColor
+                )
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -106,29 +143,49 @@ fun ProfileScreen(
                         color = textColor
                     )
                     Spacer(modifier = Modifier.height(12.dp))
+
                     // Ligne nom
-                    ProfileInfoRow("Nom", "Utilisateur", textColor)
+                    ProfileInfoRow(
+                        label = "Nom",
+                        value = uiState.displayName.ifBlank { "Non renseigné" },
+                        textColor = textColor
+                    )
                     HorizontalDivider(
                         color = if (isDarkTheme) Color.Gray.copy(alpha = 0.5f) else Color.White,
                         thickness = 1.dp,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
+
                     // Ligne email
-                    ProfileInfoRow("Email", "utilisateur@email.com", textColor)
+                    ProfileInfoRow(
+                        label = "Email",
+                        value = uiState.email.ifBlank { "Non renseigné" },
+                        textColor = textColor
+                    )
                     HorizontalDivider(
                         color = if (isDarkTheme) Color.Gray.copy(alpha = 0.5f) else Color.White,
                         thickness = 1.dp,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
+
                     // Ligne fuseau horaire
-                    ProfileInfoRow("Fuseau horaire", "UTC+1 (Paris)", textColor)
+                    ProfileInfoRow(
+                        label = "Fuseau horaire",
+                        value = uiState.timeZone,
+                        textColor = textColor
+                    )
                     HorizontalDivider(
                         color = if (isDarkTheme) Color.Gray.copy(alpha = 0.5f) else Color.White,
                         thickness = 1.dp,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
-                    // Ligne nombre d'alarmes
-                    ProfileInfoRow("Alarmes actives", "3", textColor)
+
+                    // Ligne nombre d'alarmes actives
+                    ProfileInfoRow(
+                        label = "Alarmes actives",
+                        value = "${uiState.activeAlarmsCount}",
+                        textColor = textColor
+                    )
                 }
             }
 
@@ -179,7 +236,13 @@ fun ProfileInfoRow(label: String, value: String, textColor: Color = Color.Black)
 @Composable
 fun ProfilePreview() {
     FilRougeTheme {
-        ProfileScreen(
+        ProfileContent(
+            uiState = ProfileUiState(
+                displayName = "Nans",
+                email = "loanrohou@gmail.com",
+                timeZone = "UTC+1 (Paris)",
+                activeAlarmsCount = 2
+            ),
             isDarkTheme = false,
             onBack = {},
             onLogout = {}
