@@ -33,7 +33,8 @@ fun HomeScreen(
     isDarkTheme: Boolean = false,
     onToggleDarkTheme: (Boolean) -> Unit = {},
     onBack: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {} ,
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToUserProfile: (String) -> Unit = {},
     alarmViewModel: AlarmViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -201,7 +202,10 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize()
                 ) { page ->
                     when (page) {
-                        0 -> ContactsPageContent(isDarkTheme = isDarkTheme)
+                        0 -> ContactsPageContent(
+                            isDarkTheme = isDarkTheme,
+                            onNavigateToProfile = onNavigateToUserProfile
+                        )
                         1 -> AlarmPageContent(
                             alarms = alarms,
                             isDarkTheme = isDarkTheme,

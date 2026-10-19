@@ -2,9 +2,11 @@ package com.example.filrouge
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -47,12 +49,32 @@ fun AppNavHost(
             HomeScreen(
                 isDarkTheme = isDarkTheme,
                 onToggleDarkTheme = onToggleDarkTheme,
-                onNavigateToProfile = { navController.navigate("profile") }
+                onNavigateToProfile = { navController.navigate("profile") },
+                onNavigateToUserProfile = { uid -> navController.navigate("profile/$uid") }
             )
         }
 
         composable("profile") {
             ProfileScreen(
+                userId = null,
+                isDarkTheme = isDarkTheme,
+                onBack = { navController.popBackStack() },
+                onLogout = {
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = "profile/{userId}",
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")
+            ProfileScreen(
+                userId = userId,
                 isDarkTheme = isDarkTheme,
                 onBack = { navController.popBackStack() },
                 onLogout = {

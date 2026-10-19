@@ -11,11 +11,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.TimeZone
 
+import com.google.firebase.firestore.ListenerRegistration
+
 data class ProfileUiState(
+    val userId: String = "",
     val displayName: String = "",
     val email: String = "",
     val timeZone: String = "",
-    val activeAlarmsCount: Int = 0
+    val activeAlarmsCount: Int = 0,
+    val isCurrentUser: Boolean = true,
+    val isLoading: Boolean = false
 )
 
 class ProfileViewModel(
@@ -27,9 +32,40 @@ class ProfileViewModel(
     private val _uiState = MutableStateFlow(loadInitialState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
+    private var profileListener: ListenerRegistration? = null
+
     init {
-        listenToUserProfile()
-        listenToAlarms()
+        loadProfile(null)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        profileListener?.remove()
+    }
+
+    fun loadProfile(targetUserId: String?) {
+        profileListener?.remove()
+        val currentUid = auth.currentUser?.uid
+
+        if (targetUserId == null || targetUserId == currentUid) {
+            // Profil de l'utilisateur connecté
+            _uiState.value = loadInitialState()
+            listenToUserProfile(currentUid)
+            listenToCurrentAlarms()
+        } else {
+            // Profil d'un autre utilisateur
+            _uiState.value = ProfileUiState(
+                userId = targetUserId,
+                displayName = "",
+                email = "",
+                timeZone = "Non renseigné",
+                activeAlarmsCount = 0,
+                isCurrentUser = false,
+                isLoading = true
+            )
+            listenToOtherUserProfile(targetUserId)
+            fetchOtherUserAlarms(targetUserId)
+        }
     }
 
     private fun loadInitialState(): ProfileUiState {
@@ -39,16 +75,19 @@ class ProfileViewModel(
             ?: ""
         val initialEmail = user?.email ?: ""
         return ProfileUiState(
+            userId = user?.uid ?: "",
             displayName = initialName,
             email = initialEmail,
             timeZone = getSystemTimeZoneDisplay(),
-            activeAlarmsCount = 0
+            activeAlarmsCount = 0,
+            isCurrentUser = true,
+            isLoading = false
         )
     }
 
-    private fun listenToUserProfile() {
-        val uid = auth.currentUser?.uid ?: return
-        db.collection("users").document(uid)
+    private fun listenToUserProfile(uid: String?) {
+        if (uid == null) return
+        profileListener = db.collection("users").document(uid)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
                 if (snapshot != null && snapshot.exists()) {
@@ -68,19 +107,59 @@ class ProfileViewModel(
 
                     _uiState.value = current.copy(
                         displayName = finalName,
-                        email = finalEmail
+                        email = finalEmail,
+                        isLoading = false
                     )
                 }
             }
     }
 
-    private fun listenToAlarms() {
+    private fun listenToOtherUserProfile(targetUid: String) {
+        profileListener = db.collection("users").document(targetUid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    val name = snapshot.getString("displayName")?.takeIf { it.isNotBlank() }
+                        ?: snapshot.getString("email")?.substringBefore("@")
+                        ?: "Utilisateur"
+                    val email = snapshot.getString("email") ?: ""
+                    val tz = snapshot.getString("timeZone")?.takeIf { it.isNotBlank() } ?: "Non renseigné"
+
+                    _uiState.value = _uiState.value.copy(
+                        displayName = name,
+                        email = email,
+                        timeZone = tz,
+                        isLoading = false
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
+            }
+    }
+
+    private fun listenToCurrentAlarms() {
         viewModelScope.launch {
             alarmRepo.alarmsFlow().collect { alarms ->
                 val activeCount = alarms.count { it.enabled }
                 _uiState.value = _uiState.value.copy(activeAlarmsCount = activeCount)
             }
         }
+    }
+
+    private fun fetchOtherUserAlarms(targetUid: String) {
+        db.collection("alarms")
+            .whereArrayContains("participantIds", targetUid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val count = snapshot.documents.count { it.getBoolean("enabled") == true }
+                _uiState.value = _uiState.value.copy(activeAlarmsCount = count)
+            }
+            .addOnFailureListener {
+                // En cas d'erreur de permissions éventuelle, laisser 0
+            }
     }
 
     companion object {

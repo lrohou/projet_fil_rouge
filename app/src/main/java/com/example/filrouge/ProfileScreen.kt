@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -27,11 +28,16 @@ import com.example.filrouge.viewModels.ProfileViewModel
 // Page profil de l'utilisateur
 @Composable
 fun ProfileScreen(
+    userId: String? = null,
     isDarkTheme: Boolean = false,
     viewModel: ProfileViewModel = viewModel(),
     onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
+    LaunchedEffect(userId) {
+        viewModel.loadProfile(userId)
+    }
+
     val uiState by viewModel.uiState.collectAsState()
 
     ProfileContent(
@@ -189,21 +195,22 @@ fun ProfileContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Bouton de déconnexion
-            Button(
-                onClick = onLogout,
-                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Se déconnecter",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+            // Bouton de déconnexion (uniquement sur son propre profil)
+            if (uiState.isCurrentUser) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = onLogout,
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Se déconnecter",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
