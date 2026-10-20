@@ -51,6 +51,14 @@ class ContactsViewModel(
         val currentUid = auth.currentUser?.uid
         Log.d("ContactsVM", "listenToUsers() called. currentUid: $currentUid")
 
+        if (currentUid == null) {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                error = "Utilisateur non connecté"
+            )
+            return
+        }
+
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         usersListener?.remove()

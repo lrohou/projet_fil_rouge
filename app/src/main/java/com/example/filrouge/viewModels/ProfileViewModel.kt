@@ -1,5 +1,6 @@
 package com.example.filrouge.viewModels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.filrouge.data.AlarmRepository
@@ -8,6 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import java.util.TimeZone
 
@@ -89,7 +91,11 @@ class ProfileViewModel(
         if (uid == null) return
         profileListener = db.collection("users").document(uid)
             .addSnapshotListener { snapshot, error ->
-                if (error != null) return@addSnapshotListener
+                if (error != null) {
+                    Log.e("ProfileVM", "Erreur écoute profil: ${error.message}", error)
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    return@addSnapshotListener
+                }
                 if (snapshot != null && snapshot.exists()) {
                     val firestoreName = snapshot.getString("displayName")
                     val firestoreEmail = snapshot.getString("email")
@@ -142,10 +148,14 @@ class ProfileViewModel(
 
     private fun listenToCurrentAlarms() {
         viewModelScope.launch {
-            alarmRepo.alarmsFlow().collect { alarms ->
-                val activeCount = alarms.count { it.enabled }
-                _uiState.value = _uiState.value.copy(activeAlarmsCount = activeCount)
-            }
+            alarmRepo.alarmsFlow()
+                .catch { e ->
+                    Log.e("ProfileVM", "Erreur écoute alarmes: ${e.message}", e)
+                }
+                .collect { alarms ->
+                    val activeCount = alarms.count { it.enabled }
+                    _uiState.value = _uiState.value.copy(activeAlarmsCount = activeCount)
+                }
         }
     }
 
