@@ -26,6 +26,7 @@ import com.example.filrouge.data.Alarm
 import com.example.filrouge.ui.theme.FilRougeTheme
 import com.example.filrouge.viewModels.AlarmViewModel
 import kotlinx.coroutines.launch
+import com.example.filrouge.viewModels.ContactsViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -45,6 +46,8 @@ fun HomeScreen(
         pageCount = { 3 }
     )
     val scope = rememberCoroutineScope()
+    val contactsViewModel: ContactsViewModel = viewModel()
+    val contactsState by contactsViewModel.uiState.collectAsState()
 
     // État pour afficher/masquer les notifications
     var showNotifications by remember { mutableStateOf(false) }
@@ -87,18 +90,11 @@ fun HomeScreen(
     }
 
     // Liste des notifications (avec boutons accepter et refuser)
-    val notifications = remember {
-        mutableStateListOf(
-            AppNotification(
-                id = 1,
-                title = "Gabriel",
-                message = "souhaite se réveiller à 9:00 avec vous"
-            ),
-            AppNotification(
-                id = 2,
-                title = "Patrick B",
-                message = "souhaite devenir ami avec vous"
-            )
+    val notifications = contactsState.incomingRequests.map { req ->
+        AppNotification(
+            id = req.friendshipId,
+            title = req.from.displayName,
+            message = "souhaite devenir ami avec vous"
         )
     }
 
@@ -204,7 +200,7 @@ fun HomeScreen(
                     when (page) {
                         0 -> ContactsPageContent(
                             isDarkTheme = isDarkTheme,
-                            onNavigateToProfile = onNavigateToUserProfile
+                            contactsViewModel = contactsViewModel
                         )
                         1 -> AlarmPageContent(
                             alarms = alarms,
@@ -226,8 +222,8 @@ fun HomeScreen(
             if (showNotifications) {
                 NotificationDropdown(
                     notifications = notifications,
-                    onAccept = { notif -> notifications.remove(notif) },
-                    onRefuse = { notif -> notifications.remove(notif) },
+                    onAccept = { notif -> contactsViewModel.acceptRequest(notif.id) },
+                    onRefuse = { notif -> contactsViewModel.refuseRequest(notif.id) },
                     onDismiss = { showNotifications = false }
                 )
             }

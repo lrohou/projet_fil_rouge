@@ -44,7 +44,7 @@ val NavBarBlue = Color(0xFFB8DEFF)
 
 //modèle de données pour une notification
 data class AppNotification(
-    val id: Int,
+    val id: String,
     val title: String,
     val message: String
 )

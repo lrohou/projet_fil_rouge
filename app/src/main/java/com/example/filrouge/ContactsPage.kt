@@ -29,10 +29,9 @@ import com.example.filrouge.viewModels.AppUser
 import com.example.filrouge.viewModels.ContactsViewModel
 
 //modèle de données pour un contact
-data class Contact(
-    val name: String,
-    val alarmCount: Int
-)
+data class Contact(val uid: String, val name: String, val subtitle: String)
+
+enum class FriendStatus { NONE, REQUEST_SENT, REQUEST_RECEIVED, FRIEND }
 
 //contenu de la page contacts
 @Composable
@@ -44,12 +43,11 @@ fun ContactsPageContent(
     var showNewContactDialog by remember { mutableStateOf(false) }
 
     // Liste fictive de contacts existants
-    val contacts = listOf(
-        Contact("Gabriel", 1),
-        Contact("Loan", 2),
-        Contact("User 1", 1),
-        Contact("User 2", 2)
-    )
+    val uiState by contactsViewModel.uiState.collectAsState()
+
+    val contacts = uiState.users
+        .filter { it.uid in uiState.friendIds }
+        .map { Contact(uid = it.uid, name = it.displayName, subtitle = it.email) }
 
     val textColor = if (isDarkTheme) Color.White else Color.Black
     val cardColor = if (isDarkTheme) Color(0xFF1E2A38) else CardBlue
@@ -73,6 +71,14 @@ fun ContactsPageContent(
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
+
+        if (contacts.isEmpty()) {
+            Text(
+                text = "Aucun contact pour l'instant",
+                color = textColor,
+                fontSize = 14.sp
+            )
+        }
 
         //liste des contacts
         contacts.forEach { contact ->
@@ -318,22 +324,32 @@ fun NewContactDialog(
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             items(uiState.filteredUsers, key = { it.uid }) { user ->
+                                val incoming = uiState.incomingRequests.firstOrNull { it.from.uid == user.uid }
+                                val status = when {
+                                    user.uid in uiState.friendIds -> FriendStatus.FRIEND
+                                    user.uid in uiState.friendRequestsSent -> FriendStatus.REQUEST_SENT
+                                    incoming != null -> FriendStatus.REQUEST_RECEIVED
+                                    else -> FriendStatus.NONE
+                                }
                                 UserSearchItem(
                                     user = user,
                                     isDarkTheme = isDarkTheme,
                                     itemBg = itemBg,
                                     textColor = textColor,
                                     subTextColor = subTextColor,
-                                    isFriendRequestSent = user.uid in uiState.friendRequestsSent,
+                                    status = status,
                                     onUserClick = { onNavigateToProfile(user.uid) },
                                     onFriendRequestClick = {
-                                        viewModel.sendFriendRequest(user.uid)
-                                        Toast.makeText(
-                                            context,
-                                            "Demande d'ami envoyée à ${user.displayName}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
+                                        viewModel.sendFriendRequest(user.uid) { success ->
+                                            Toast.makeText(
+                                                context,
+                                                if (success) "Demande d'ami envoyée à ${user.displayName}"
+                                                else "Impossible d'envoyer la demande",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    },
+                                    onAcceptClick = { incoming?.let { viewModel.acceptRequest(it.friendshipId) } }
                                 )
                             }
                         }
@@ -352,9 +368,10 @@ fun UserSearchItem(
     itemBg: Color,
     textColor: Color,
     subTextColor: Color,
-    isFriendRequestSent: Boolean,
+    status: FriendStatus,
     onUserClick: () -> Unit,
-    onFriendRequestClick: () -> Unit
+    onFriendRequestClick: () -> Unit,
+    onAcceptClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -421,10 +438,28 @@ fun UserSearchItem(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Bouton "Demande d'ami" (fictif pour l'instant)
-            if (isFriendRequestSent) {
-                OutlinedButton(
-                    onClick = { /* Déjà envoyée */ },
+            // Bouton "Demande d'ami"
+            when (status) {
+                FriendStatus.NONE -> Button(
+                    onClick = onFriendRequestClick,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text("Demande d'ami", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                }
+
+                FriendStatus.REQUEST_RECEIVED -> Button(
+                    onClick = onAcceptClick,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text("Accepter", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                }
+
+                FriendStatus.REQUEST_SENT, FriendStatus.FRIEND -> OutlinedButton(
+                    onClick = { },
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -432,23 +467,9 @@ fun UserSearchItem(
                     )
                 ) {
                     Text(
-                        text = "Envoyée ✓",
+                        text = if (status == FriendStatus.FRIEND) "Ami ✓" else "Envoyée ✓",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
-                    )
-                }
-            } else {
-                Button(
-                    onClick = onFriendRequestClick,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = "Demande d'ami",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
                     )
                 }
             }
@@ -504,7 +525,7 @@ fun ContactCard(
                     color = textColor
                 )
                 Text(
-                    text = "${contact.alarmCount} réveil actif",
+                    text = "${contact.subtitle}",
                     fontSize = 13.sp,
                     color = subtitleColor
                 )

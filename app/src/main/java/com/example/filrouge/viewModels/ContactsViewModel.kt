@@ -2,17 +2,28 @@ package com.example.filrouge.viewModels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.filrouge.data.FriendRepository
+import com.example.filrouge.data.Friendship
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class AppUser(
     val uid: String = "",
     val displayName: String = "",
     val email: String = ""
+)
+
+data class FriendRequest(
+    val friendshipId: String,
+    val from: AppUser
 )
 
 data class ContactsUiState(
@@ -21,21 +32,33 @@ data class ContactsUiState(
     val isLoading: Boolean = false,
     val searchQuery: String = "",
     val friendRequestsSent: Set<String> = emptySet(),
+    val friendIds: Set<String> = emptySet(),
+    val incomingRequests: List<FriendRequest> = emptyList(),
     val error: String? = null
 )
 
 class ContactsViewModel(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val friendRepo: FriendRepository = FriendRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ContactsUiState(isLoading = true))
     val uiState: StateFlow<ContactsUiState> = _uiState.asStateFlow()
 
     private var usersListener: ListenerRegistration? = null
+    private var friendships: List<Friendship> = emptyList()
 
     init {
         listenToUsers()
+        viewModelScope.launch {
+            friendRepo.friendshipsFlow()
+                .catch { Log.e("ContactsVM", "Erreur friendships", it) }
+                .collect { list ->
+                    friendships = list
+                    updateFriendState()
+                }
+        }
     }
 
     override fun onCleared() {
@@ -65,7 +88,7 @@ class ContactsViewModel(
         usersListener = db.collection("users")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e("ContactsVM", "Erreur Firestore lors de la récupération des users: ${error.message}", error)
+                    Log.e("ContactsVM", "Erreur Firestore: ${error.message}", error)
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = error.localizedMessage ?: error.message ?: "Erreur de permissions Firestore"
@@ -74,28 +97,22 @@ class ContactsViewModel(
                 }
 
                 if (snapshot != null) {
-                    Log.d("ContactsVM", "Documents reçus: ${snapshot.size()}")
                     val allUsers = snapshot.documents.mapNotNull { doc ->
-                        val uid = doc.id
                         val displayName = doc.getString("displayName")?.takeIf { it.isNotBlank() }
                             ?: doc.getString("email")?.substringBefore("@")
                             ?: "Utilisateur"
-                        val email = doc.getString("email") ?: ""
-                        Log.d("ContactsVM", "User trouvé -> id: $uid, name: $displayName, email: $email")
-                        AppUser(uid = uid, displayName = displayName, email = email)
-                    }.filter { user ->
-                        //tous les users sauf le user connecté
-                        val isCurrentUser = (user.uid == currentUid)
-                        if (isCurrentUser) {
-                            Log.d("ContactsVM", "Exclusion de l'utilisateur connecté: ${user.uid}")
-                        }
-                        !isCurrentUser
-                    }.sortedBy { it.displayName.lowercase() }
+                        AppUser(
+                            uid = doc.id,
+                            displayName = displayName,
+                            email = doc.getString("email") ?: ""
+                        )
+                    }
+                        .filter { it.uid != currentUid }   // tous les users sauf le user connecté
+                        .sortedBy { it.displayName.lowercase() }
 
-                    Log.d("ContactsVM", "Total users affichables (hors utilisateur courant): ${allUsers.size}")
+                    Log.d("ContactsVM", "Total users affichables: ${allUsers.size}")
 
-                    val currentQuery = _uiState.value.searchQuery
-                    val filtered = applyFilter(allUsers, currentQuery)
+                    val filtered = applyFilter(allUsers, _uiState.value.searchQuery)
 
                     _uiState.value = _uiState.value.copy(
                         users = allUsers,
@@ -103,11 +120,35 @@ class ContactsViewModel(
                         isLoading = false,
                         error = null
                     )
+                    // Les noms des demandeurs se résolvent à partir de cette liste
+                    updateFriendState()
                 } else {
                     Log.w("ContactsVM", "Snapshot est null")
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }
             }
+    }
+
+    private fun updateFriendState() {
+        val me = auth.currentUser?.uid ?: return
+        _uiState.update { state ->
+            val sent = friendships
+                .filter { it.status == "pending" && it.requesterId == me }
+                .map { it.otherUid(me) }.toSet()
+            val friends = friendships
+                .filter { it.status == "accepted" }
+                .map { it.otherUid(me) }.toSet()
+            val incoming = friendships
+                .filter { it.status == "pending" && it.requesterId != me }
+                .map { f ->
+                    FriendRequest(
+                        friendshipId = f.id,
+                        from = state.users.firstOrNull { it.uid == f.requesterId }
+                            ?: AppUser(uid = f.requesterId, displayName = "Utilisateur")
+                    )
+                }
+            state.copy(friendRequestsSent = sent, friendIds = friends, incomingRequests = incoming)
+        }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -118,10 +159,20 @@ class ContactsViewModel(
         )
     }
 
-    fun sendFriendRequest(userId: String) {
-        //action fictive de demande d'ami
-        val updatedSet = _uiState.value.friendRequestsSent + userId
-        _uiState.value = _uiState.value.copy(friendRequestsSent = updatedSet)
+    fun sendFriendRequest(userId: String, onResult: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val result = friendRepo.sendRequest(userId)
+            result.onFailure { Log.e("ContactsVM", "Demande échouée", it) }
+            onResult(result.isSuccess)
+        }
+    }
+
+    fun acceptRequest(friendshipId: String) {
+        viewModelScope.launch { friendRepo.accept(friendshipId) }
+    }
+
+    fun refuseRequest(friendshipId: String) {
+        viewModelScope.launch { friendRepo.remove(friendshipId) }
     }
 
     private fun applyFilter(users: List<AppUser>, query: String): List<AppUser> {
