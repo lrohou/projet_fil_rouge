@@ -14,6 +14,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -31,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.filrouge.data.Alarm
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.filrouge.ui.theme.FilRougeTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
@@ -299,8 +302,9 @@ fun AlarmCard(
 fun AlarmEditDialog(
     isDarkTheme: Boolean = false,
     existingAlarm: Alarm? = null, // null = création, non-null = édition
+    contactsList: List<Contact>,
     onDismiss: () -> Unit,
-    onConfirm: (hour: Int, minute: Int, name: String, days: List<Int>, soundName: String, vibrate: Boolean) -> Unit
+    onConfirm: (hour: Int, minute: Int, name: String, days: List<Int>, soundName: String, vibrate: Boolean, contacts: List<String>) -> Unit
 ) {
     val isEdit = existingAlarm != null
     val dialogTitle = if (isEdit) "Modifier l'alarme" else "Nouvelle Alarme"
@@ -316,6 +320,9 @@ fun AlarmEditDialog(
     var vibrate by remember { mutableStateOf(existingAlarm?.vibrate ?: false) }
     var showSoundPicker by remember { mutableStateOf(false) }
 
+    var selectedContacts by remember { mutableStateOf(existingAlarm?.participantIds ?: emptyList<String>()) }
+    var showContacts by remember { mutableStateOf(false) }
+
     val dialogBg = if (isDarkTheme) Color(0xFF1E2A38) else Color.White
     val textColor = if (isDarkTheme) Color.White else Color.Black
 
@@ -330,6 +337,22 @@ fun AlarmEditDialog(
             }
         )
         return
+    }
+
+    if (showContacts) {
+        ContactsPickerDialog(
+            isDarkTheme = isDarkTheme,
+            contactsList = contactsList, // On transmet la vraie liste
+            selectedList = selectedContacts,
+            onDismiss = { showContacts = false },
+            onContactToggled = { contactUid -> // On travaille désormais avec l'UID
+                selectedContacts = if (selectedContacts.contains(contactUid)) {
+                    selectedContacts - contactUid
+                } else {
+                    selectedContacts + contactUid
+                }
+            }
+        )
     }
 
     AlertDialog(
@@ -409,11 +432,24 @@ fun AlarmEditDialog(
                     Text("Vibreur", fontWeight = FontWeight.Medium, color = textColor, fontSize = 14.sp)
                     Switch(checked = vibrate, onCheckedChange = { vibrate = it })
                 }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = { showContacts = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Ajouter des contacts", color = Color.White)
+                    }
+
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(timeState.hour, timeState.minute, name, selectedDays, soundName, vibrate) },
+                onClick = { onConfirm(timeState.hour, timeState.minute, name, selectedDays, soundName, vibrate, selectedContacts) },
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                 shape = RoundedCornerShape(12.dp)
             ) { Text(if (isEdit) "Enregistrer" else "Créer", color = Color.White) }
@@ -593,4 +629,86 @@ fun SoundPickerDialog(
             }
         }
     )
+}
+@Composable
+fun ContactsPickerDialog(
+    isDarkTheme: Boolean,
+    contactsList: List<Contact>, // Reçoit la liste des vrais contacts
+    selectedList: List<String>,  // Reçoit les UIDs sélectionnés
+    onDismiss: () -> Unit,
+    onContactToggled: (String) -> Unit // Renvoie un UID
+) {
+    val dialogBg = if (isDarkTheme) Color(0xFF1E2A38) else Color.White
+    val textColor = if (isDarkTheme) Color.White else Color.Black
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = dialogBg,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text("Inviter des contacts", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = textColor)
+        },
+        text = {
+            if (contactsList.isEmpty()) {
+                Text(
+                    text = "Aucun contact disponible",
+                    color = textColor,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 400.dp)
+                ) {
+                    items(contactsList) { contact ->
+                        // Vérifie si l'UID de ce contact est dans la liste des sélectionnés
+                        val isSelected = selectedList.contains(contact.uid)
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onContactToggled(contact.uid) }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = contact.name, // Affichage du nom
+                                color = textColor,
+                                fontSize = 16.sp
+                            )
+                            Checkbox(
+                                checked = isSelected,
+                                onCheckedChange = { onContactToggled(contact.uid) },
+                                colors = CheckboxDefaults.colors(checkedColor = DarkBlue)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Terminer", color = if (isDarkTheme) Color(0xFF90CAFF) else DarkBlue)
+            }
+        }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AlarmPageContentPreview() {
+    FilRougeTheme {
+        AlarmPageContent(
+            alarms = listOf(
+                Alarm(id = "1", hour = 7, minute = 30, enabled = true, name = "Réveil matin", days = listOf(1, 2, 3, 4, 5)),
+                Alarm(id = "2", hour = 9, minute = 0, enabled = false, name = "Weekend", days = listOf(6, 7))
+            ),
+            isDarkTheme = false,
+            onToggle = { _, _ -> },
+            onDelete = {},
+            onNewAlarmClick = {},
+            onEditAlarm = {}
+        )
+    }
 }

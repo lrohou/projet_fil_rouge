@@ -63,14 +63,19 @@ fun HomeScreen(
 
     val alarms by alarmViewModel.alarms.collectAsState()
 
+    val realContacts = contactsState.users
+        .filter { it.uid in contactsState.friendIds }
+        .map { Contact(uid = it.uid, name = it.displayName, subtitle = it.email) }
+
     // Dialog de création d'une nouvelle alarme
     if (showNewAlarmDialog) {
         AlarmEditDialog(
             isDarkTheme = isDarkTheme,
             existingAlarm = null,
+            contactsList = realContacts, // 2. Ajout de la liste de contacts ici
             onDismiss = { showNewAlarmDialog = false },
-            onConfirm = { hour, minute, name, days, soundName, vibrate ->
-                alarmViewModel.createAlarm(context, hour, minute, name, days, soundName, vibrate)
+            onConfirm = { hour, minute, name, days, soundName, vibrate, contacts ->
+                alarmViewModel.createAlarm(context, hour, minute, name, days, soundName, vibrate, contacts)
                 showNewAlarmDialog = false
             }
         )
@@ -81,9 +86,10 @@ fun HomeScreen(
         AlarmEditDialog(
             isDarkTheme = isDarkTheme,
             existingAlarm = alarm,
+            contactsList = realContacts, // 3. Ajout de la liste de contacts ici
             onDismiss = { editingAlarm = null },
-            onConfirm = { hour, minute, name, days, soundName, vibrate ->
-                alarmViewModel.updateAlarm(context, alarm, hour, minute, name, days, soundName, vibrate)
+            onConfirm = { hour, minute, name, days, soundName, vibrate, contacts ->
+                alarmViewModel.updateAlarm(context, alarm, hour, minute, name, days, soundName, vibrate, contacts)
                 editingAlarm = null
             }
         )

@@ -42,9 +42,11 @@ class AlarmRepository(
         name: String,
         days: List<Int>,
         soundName: String,
-        vibrate: Boolean
+        vibrate: Boolean,
+        contacts: List<String>
     ): Result<String> = runCatching {
         val uid = auth.currentUser?.uid ?: error("Utilisateur non connecté")
+        val allParticipants = (listOf(uid) + contacts).distinct()
         val docRef = alarms.document()
         docRef.set(
             mapOf(
@@ -56,7 +58,7 @@ class AlarmRepository(
                 "days" to days,
                 "soundName" to soundName,
                 "vibrate" to vibrate,
-                "participantIds" to listOf(uid),
+                "participantIds" to allParticipants,
                 "createdAt" to FieldValue.serverTimestamp()
             )
         ).await()
@@ -70,8 +72,12 @@ class AlarmRepository(
         name: String,
         days: List<Int>,
         soundName: String,
-        vibrate: Boolean
+        vibrate: Boolean,
+        contacts: List<String>
     ): Result<Unit> = runCatching {
+        val uid = auth.currentUser?.uid ?: error("Utilisateur non connecté")
+
+        val allParticipants = (listOf(uid) + contacts).distinct()
         alarms.document(alarmId).update(
             mapOf(
                 "hour" to hour,
@@ -79,7 +85,8 @@ class AlarmRepository(
                 "name" to name,
                 "days" to days,
                 "soundName" to soundName,
-                "vibrate" to vibrate
+                "vibrate" to vibrate,
+                "participantIds" to allParticipants
             )
         ).await()
         Unit

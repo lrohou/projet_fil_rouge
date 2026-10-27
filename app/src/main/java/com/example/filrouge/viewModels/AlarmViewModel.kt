@@ -33,9 +33,10 @@ class AlarmViewModel(
         name: String,
         days: List<Int>,
         soundName: String,
-        vibrate: Boolean
+        vibrate: Boolean,
+        contacts: List<String>
     ) = viewModelScope.launch {
-        repo.createAlarm(hour, minute, name, days, soundName, vibrate)
+        repo.createAlarm(hour, minute, name, days, soundName, vibrate, contacts)
             .onSuccess { alarmId ->
                 scheduleAlarm(context, alarmId, hour, minute, name, soundName, vibrate, days, true)
             }
@@ -50,9 +51,10 @@ class AlarmViewModel(
         name: String,
         days: List<Int>,
         soundName: String,
-        vibrate: Boolean
+        vibrate: Boolean,
+        contacts: List<String>
     ) = viewModelScope.launch {
-        repo.updateAlarm(alarm.id, hour, minute, name, days, soundName, vibrate)
+        repo.updateAlarm(alarm.id, hour, minute, name, days, soundName, vibrate, contacts)
             .onSuccess {
                 // Re-programmer l'alarme avec les nouvelles valeurs
                 cancelAlarm(context, alarm.id)

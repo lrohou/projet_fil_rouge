@@ -20,6 +20,7 @@ data class AppUser(
     val displayName: String = "",
     val email: String = ""
 )
+// Fichier séparé
 
 data class FriendRequest(
     val friendshipId: String,
