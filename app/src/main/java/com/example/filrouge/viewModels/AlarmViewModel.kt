@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.filrouge.AlarmReceiver
 import com.example.filrouge.data.Alarm
+import com.example.filrouge.data.AlarmInvitation
 import com.example.filrouge.data.AlarmRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,21 @@ class AlarmViewModel(
         .catch { Log.e("AlarmVM", "Erreur de lecture", it); emit(emptyList()) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    val alarmInvitations: StateFlow<List<AlarmInvitation>> = repo.alarmInvitationsFlow()
+        .catch { Log.e("AlarmVM", "Erreur de lecture invitations", it); emit(emptyList()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun acceptInvitation(invitation: AlarmInvitation) = viewModelScope.launch {
+        repo.acceptAlarmInvitation(invitation)
+            .onSuccess { Log.d("AlarmVM", "Invitation acceptée: ${invitation.alarmName}") }
+            .onFailure { Log.e("AlarmVM", "Échec acceptation invitation", it) }
+    }
+
+    fun declineInvitation(invitationId: String) = viewModelScope.launch {
+        repo.declineAlarmInvitation(invitationId)
+            .onFailure { Log.e("AlarmVM", "Échec refus invitation", it) }
+    }
+
     fun createAlarm(
         context: Context,
         hour: Int,
@@ -36,11 +52,15 @@ class AlarmViewModel(
         vibrate: Boolean,
         contacts: List<String>
     ) = viewModelScope.launch {
+        Log.d("AlarmVM", "createAlarm appelée avec ${contacts.size} contacts: $contacts")
         repo.createAlarm(hour, minute, name, days, soundName, vibrate, contacts)
             .onSuccess { alarmId ->
+                Log.d("AlarmVM", "Alarme créée avec succès. id=$alarmId")
                 scheduleAlarm(context, alarmId, hour, minute, name, soundName, vibrate, days, true)
             }
-            .onFailure { Log.e("AlarmVM", "Création échouée", it) }
+            .onFailure { e ->
+                Log.e("AlarmVM", "Création d'alarme échouée: ${e.message}", e)
+            }
     }
 
     fun updateAlarm(

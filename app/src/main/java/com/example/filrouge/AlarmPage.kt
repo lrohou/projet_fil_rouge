@@ -38,6 +38,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Close
+import com.example.filrouge.data.AlarmInvitation
 
 //couleurs de l'application
 val LightBlue = Color(0xFFD0EBFF)
@@ -45,11 +46,15 @@ val CardBlue = Color(0xFFD0EBFF)
 val DarkBlue = Color(0xFF0055A4)
 val NavBarBlue = Color(0xFFB8DEFF)
 
+enum class NotificationType { FRIEND_REQUEST, ALARM_INVITATION }
+
 //modèle de données pour une notification
 data class AppNotification(
     val id: String,
     val title: String,
-    val message: String
+    val message: String,
+    val type: NotificationType = NotificationType.FRIEND_REQUEST,
+    val alarmInvitation: AlarmInvitation? = null
 )
 
 //liste des sons disponibles (noms des fichiers dans res/raw sans extension)
@@ -436,12 +441,13 @@ fun AlarmEditDialog(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val countText = if (selectedContacts.isNotEmpty()) " (${selectedContacts.size})" else ""
                     Button(
                         onClick = { showContacts = true },
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Ajouter des contacts", color = Color.White)
+                        Text("Inviter des contacts$countText", color = Color.White)
                     }
 
                 }
@@ -679,7 +685,7 @@ fun ContactsPickerDialog(
                             )
                             Checkbox(
                                 checked = isSelected,
-                                onCheckedChange = { onContactToggled(contact.uid) },
+                                onCheckedChange = null,
                                 colors = CheckboxDefaults.colors(checkedColor = DarkBlue)
                             )
                         }

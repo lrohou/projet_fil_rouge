@@ -95,14 +95,29 @@ fun HomeScreen(
         )
     }
 
-    // Liste des notifications (avec boutons accepter et refuser)
-    val notifications = contactsState.incomingRequests.map { req ->
+    // Liste des notifications (demandes d'ami + invitations d'alarme)
+    val alarmInvitations by alarmViewModel.alarmInvitations.collectAsState()
+
+    val friendNotifications = contactsState.incomingRequests.map { req ->
         AppNotification(
             id = req.friendshipId,
             title = req.from.displayName,
-            message = "souhaite devenir ami avec vous"
+            message = "souhaite devenir ami avec vous",
+            type = NotificationType.FRIEND_REQUEST
         )
     }
+
+    val alarmNotifications = alarmInvitations.map { inv ->
+        AppNotification(
+            id = inv.id,
+            title = inv.senderName,
+            message = "vous invite à l'alarme '${inv.displayName}' (${inv.formattedTime})",
+            type = NotificationType.ALARM_INVITATION,
+            alarmInvitation = inv
+        )
+    }
+
+    val notifications = friendNotifications + alarmNotifications
 
     BackHandler(enabled = showNotifications) {
         showNotifications = false
@@ -228,8 +243,20 @@ fun HomeScreen(
             if (showNotifications) {
                 NotificationDropdown(
                     notifications = notifications,
-                    onAccept = { notif -> contactsViewModel.acceptRequest(notif.id) },
-                    onRefuse = { notif -> contactsViewModel.refuseRequest(notif.id) },
+                    onAccept = { notif ->
+                        when (notif.type) {
+                            NotificationType.FRIEND_REQUEST -> contactsViewModel.acceptRequest(notif.id)
+                            NotificationType.ALARM_INVITATION -> notif.alarmInvitation?.let { inv ->
+                                alarmViewModel.acceptInvitation(inv)
+                            }
+                        }
+                    },
+                    onRefuse = { notif ->
+                        when (notif.type) {
+                            NotificationType.FRIEND_REQUEST -> contactsViewModel.refuseRequest(notif.id)
+                            NotificationType.ALARM_INVITATION -> alarmViewModel.declineInvitation(notif.id)
+                        }
+                    },
                     onDismiss = { showNotifications = false }
                 )
             }
