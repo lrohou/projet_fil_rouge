@@ -182,6 +182,69 @@ class AlarmViewModel(
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             alarmManager.cancel(pendingIntent)
+            cancelSnooze(context, alarmId)
+            com.example.filrouge.data.SnoozeManager.resetSnoozeCount(context, alarmId)
+        }
+
+        fun scheduleSnooze(
+            context: Context,
+            alarmId: String,
+            name: String,
+            soundName: String,
+            vibrate: Boolean,
+            minutesLater: Int = 10
+        ) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val requestCode = (alarmId + "_snooze").hashCode()
+
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                putExtra("alarm_id", alarmId)
+                putExtra("alarm_name", name)
+                putExtra("alarm_sound", soundName)
+                putExtra("alarm_vibrate", vibrate)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, requestCode, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val triggerTime = System.currentTimeMillis() + minutesLater * 60 * 1000L
+
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (alarmManager.canScheduleExactAlarms()) {
+                        alarmManager.setAlarmClock(
+                            AlarmManager.AlarmClockInfo(triggerTime, pendingIntent),
+                            pendingIntent
+                        )
+                    } else {
+                        alarmManager.setAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            triggerTime,
+                            pendingIntent
+                        )
+                    }
+                } else {
+                    alarmManager.setAlarmClock(
+                        AlarmManager.AlarmClockInfo(triggerTime, pendingIntent),
+                        pendingIntent
+                    )
+                }
+                Log.d("AlarmVM", "Snooze programmé dans $minutesLater min pour $name (id=$alarmId)")
+            } catch (e: SecurityException) {
+                Log.e("AlarmVM", "Pas la permission pour programmer le snooze", e)
+            }
+        }
+
+        fun cancelSnooze(context: Context, alarmId: String) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, AlarmReceiver::class.java)
+            val requestCode = (alarmId + "_snooze").hashCode()
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, requestCode, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pendingIntent)
         }
     }
 }

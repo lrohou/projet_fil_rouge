@@ -24,6 +24,7 @@ class AlarmReceiver : BroadcastReceiver() {
         const val CHANNEL_ID = "alarm_channel"
         const val NOTIFICATION_ID = 9999
         const val ACTION_STOP = "com.example.filrouge.STOP_ALARM"
+        const val ACTION_SNOOZE = "com.example.filrouge.SNOOZE_ALARM"
 
         //reference statique au mediaplayer et vibrator pour pouvoir les arrêter
         var mediaPlayer: MediaPlayer? = null
@@ -43,8 +44,40 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == ACTION_STOP) {
             stopAlarm()
+            val alarmId = intent.getStringExtra("alarm_id")
+            if (!alarmId.isNullOrEmpty()) {
+                com.example.filrouge.data.SnoozeManager.resetSnoozeCount(context, alarmId)
+                com.example.filrouge.viewModels.AlarmViewModel.cancelSnooze(context, alarmId)
+            }
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.cancel(NOTIFICATION_ID)
+            return
+        }
+
+        if (intent.action == ACTION_SNOOZE) {
+            stopAlarm()
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.cancel(NOTIFICATION_ID)
+
+            val alarmId = intent.getStringExtra("alarm_id") ?: return
+            val alarmName = intent.getStringExtra("alarm_name") ?: "Alarme"
+            val soundName = intent.getStringExtra("alarm_sound") ?: "aura_tone"
+            val shouldVibrate = intent.getBooleanExtra("alarm_vibrate", false)
+
+            val newCount = com.example.filrouge.data.SnoozeManager.incrementSnoozeCount(context, alarmId)
+
+            //envoie de la notification Discord
+            val userName = com.example.filrouge.data.SnoozeManager.getUserName(context)
+            com.example.filrouge.data.SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount)
+
+            com.example.filrouge.viewModels.AlarmViewModel.scheduleSnooze(
+                context = context,
+                alarmId = alarmId,
+                name = alarmName,
+                soundName = soundName,
+                vibrate = shouldVibrate,
+                minutesLater = 10
+            )
             return
         }
 
@@ -83,6 +116,8 @@ class AlarmReceiver : BroadcastReceiver() {
             addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             putExtra("alarm_id", alarmId)
             putExtra("alarm_name", alarmName)
+            putExtra("alarm_sound", soundName)
+            putExtra("alarm_vibrate", shouldVibrate)
         }
 
         val fullScreenPendingIntent = PendingIntent.getActivity(
@@ -93,9 +128,23 @@ class AlarmReceiver : BroadcastReceiver() {
         //intent pour le bouton éteindre de la notification
         val stopIntent = Intent(context, AlarmReceiver::class.java).apply {
             action = ACTION_STOP
+            putExtra("alarm_id", alarmId)
         }
         val stopPendingIntent = PendingIntent.getBroadcast(
             context, 0, stopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        //intent pour le bouton snooze de la notification
+        val snoozeIntent = Intent(context, AlarmReceiver::class.java).apply {
+            action = ACTION_SNOOZE
+            putExtra("alarm_id", alarmId)
+            putExtra("alarm_name", alarmName)
+            putExtra("alarm_sound", soundName)
+            putExtra("alarm_vibrate", shouldVibrate)
+        }
+        val snoozePendingIntent = PendingIntent.getBroadcast(
+            context, (alarmId + "_snooze_notif").hashCode(), snoozeIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -110,6 +159,7 @@ class AlarmReceiver : BroadcastReceiver() {
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(R.drawable.ic_close, "Éteindre", stopPendingIntent)
+            .addAction(R.drawable.ic_bell, "Snooze (+10 min)", snoozePendingIntent)
             .setFullScreenIntent(fullScreenPendingIntent, true)
             .build()
 

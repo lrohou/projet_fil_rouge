@@ -15,12 +15,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.filrouge.data.SnoozeManager
 import com.example.filrouge.ui.theme.FilRougeTheme
 import com.example.filrouge.viewModels.ProfileUiState
 import com.example.filrouge.viewModels.ProfileViewModel
@@ -39,6 +41,14 @@ fun ProfileScreen(
     }
 
     val uiState by viewModel.uiState.collectAsState()
+
+    // Sauvegarder le nom dès qu'il est chargé depuis Firestore (pour AlarmReceiver / AlarmRingActivity)
+    val context = LocalContext.current
+    LaunchedEffect(uiState.displayName) {
+        if (uiState.displayName.isNotBlank()) {
+            SnoozeManager.saveUserName(context, uiState.displayName)
+        }
+    }
 
     ProfileContent(
         uiState = uiState,

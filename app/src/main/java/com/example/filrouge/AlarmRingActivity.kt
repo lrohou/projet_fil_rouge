@@ -6,8 +6,10 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +26,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.example.filrouge.data.SnoozeManager
 import com.example.filrouge.ui.theme.FilRougeTheme
+import com.example.filrouge.viewModels.AlarmViewModel
+
 
 class AlarmRingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,16 +61,53 @@ class AlarmRingActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
 
+        val alarmId = intent.getStringExtra("alarm_id") ?: ""
         val alarmName = intent.getStringExtra("alarm_name") ?: "Alarme"
+        val soundName = intent.getStringExtra("alarm_sound") ?: "aura_tone"
+        val shouldVibrate = intent.getBooleanExtra("alarm_vibrate", false)
+
+        val snoozeCount = SnoozeManager.getSnoozeCount(this, alarmId)
 
         setContent {
             FilRougeTheme(darkTheme = true, dynamicColor = false) {
                 AlarmRingScreen(
                     alarmName = alarmName,
+                    snoozeCount = snoozeCount,
                     onDismiss = {
                         AlarmReceiver.stopAlarm()
                         val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                         nm.cancel(AlarmReceiver.NOTIFICATION_ID)
+                        AlarmViewModel.cancelSnooze(this, alarmId)
+                        SnoozeManager.resetSnoozeCount(this, alarmId)
+                        finish()
+                    },
+                    onSnooze = {
+                        AlarmReceiver.stopAlarm()
+                        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                        nm.cancel(AlarmReceiver.NOTIFICATION_ID)
+
+                        val newCount = SnoozeManager.incrementSnoozeCount(this, alarmId)
+                        val retardMinutes = newCount * 10
+
+                        // Envoyer la notification Discord
+                        val userName = SnoozeManager.getUserName(this)
+                        SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount)
+
+                        AlarmViewModel.scheduleSnooze(
+                            context = this,
+                            alarmId = alarmId,
+                            name = alarmName,
+                            soundName = soundName,
+                            vibrate = shouldVibrate,
+                            minutesLater = 10
+                        )
+
+                        Toast.makeText(
+                            this,
+                            "Alarme reportée de 10 min (Retard estimé : $retardMinutes min)",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
                         finish()
                     }
                 )
@@ -77,8 +119,12 @@ class AlarmRingActivity : ComponentActivity() {
 @Composable
 fun AlarmRingScreen(
     alarmName: String,
-    onDismiss: () -> Unit
+    snoozeCount: Int = 0,
+    onDismiss: () -> Unit,
+    onSnooze: () -> Unit
 ) {
+    val estimatedDelay = snoozeCount * 10
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -115,7 +161,25 @@ fun AlarmRingScreen(
                 color = Color(0xFFB0C4DE)
             )
 
-            Spacer(modifier = Modifier.height(64.dp))
+            //retard estimé si l'alarme a déjà été snoozée
+            if (snoozeCount > 0) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Surface(
+                    color = Color(0x33FFA726),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, Color(0x88FFA726))
+                ) {
+                    Text(
+                        text = "⏱️ Retard estimé : $estimatedDelay min (Snooze x$snoozeCount)",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFFFCC80),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
 
             //bouton éteindre
             Button(
@@ -131,6 +195,28 @@ fun AlarmRingScreen(
                 Text(
                     text = "Éteindre",
                     fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            //bouton snooze
+            Button(
+                onClick = onSnooze,
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .height(64.dp),
+                shape = RoundedCornerShape(32.dp),
+                border = BorderStroke(1.5.dp, Color(0x88FFFFFF)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0x22FFFFFF)
+                )
+            ) {
+                Text(
+                    text = "Snooze (+10 min)",
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
