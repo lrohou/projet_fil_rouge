@@ -13,8 +13,6 @@ object SnoozeManager {
     private const val PREFS_NAME = "alarm_snooze_prefs"
     private const val KEY_SNOOZE_COUNT_PREFIX = "snooze_count_"
     private const val KEY_USER_NAME = "user_display_name"
-    private const val DISCORD_WEBHOOK_URL =
-        "https://discord.com/api/webhooks/1564708643335704646/0lUA1MX6nrK7SL3mKEKMu6nGKuA4IoflFyZPOalS28DryHCkcwgxWIvjdsk7NKKKicoE"
 
     fun saveUserName(context: Context, name: String) {
         if (name.isBlank()) return
@@ -51,7 +49,14 @@ object SnoozeManager {
         prefs.edit().remove(KEY_SNOOZE_COUNT_PREFIX + alarmId).apply()
     }
 
-    fun sendDiscordSnoozeNotification(userName: String, alarmName: String, snoozeCount: Int) {
+    fun sendDiscordSnoozeNotification(
+        userName: String,
+        alarmName: String,
+        snoozeCount: Int,
+        webhookUrl: String
+    ) {
+        if (webhookUrl.isBlank()) return
+
         val retardMinutes = snoozeCount * 10
         val safeName = userName.replace("\"", "\\\"")
         val safeAlarm = alarmName.replace("\"", "\\\"")
@@ -59,7 +64,7 @@ object SnoozeManager {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val url = URL(DISCORD_WEBHOOK_URL)
+                val url = URL(webhookUrl.trim())
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")

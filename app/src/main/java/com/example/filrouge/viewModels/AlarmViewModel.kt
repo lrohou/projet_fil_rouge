@@ -50,13 +50,14 @@ class AlarmViewModel(
         days: List<Int>,
         soundName: String,
         vibrate: Boolean,
-        contacts: List<String>
+        contacts: List<String>,
+        discordWebhookUrl: String = ""
     ) = viewModelScope.launch {
         Log.d("AlarmVM", "createAlarm appelée avec ${contacts.size} contacts: $contacts")
-        repo.createAlarm(hour, minute, name, days, soundName, vibrate, contacts)
+        repo.createAlarm(hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl)
             .onSuccess { alarmId ->
                 Log.d("AlarmVM", "Alarme créée avec succès. id=$alarmId")
-                scheduleAlarm(context, alarmId, hour, minute, name, soundName, vibrate, days, true)
+                scheduleAlarm(context, alarmId, hour, minute, name, soundName, vibrate, days, true, discordWebhookUrl)
             }
             .onFailure { e ->
                 Log.e("AlarmVM", "Création d'alarme échouée: ${e.message}", e)
@@ -72,13 +73,14 @@ class AlarmViewModel(
         days: List<Int>,
         soundName: String,
         vibrate: Boolean,
-        contacts: List<String>
+        contacts: List<String>,
+        discordWebhookUrl: String = ""
     ) = viewModelScope.launch {
-        repo.updateAlarm(alarm.id, hour, minute, name, days, soundName, vibrate, contacts)
+        repo.updateAlarm(alarm.id, hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl)
             .onSuccess {
                 // Re-programmer l'alarme avec les nouvelles valeurs
                 cancelAlarm(context, alarm.id)
-                scheduleAlarm(context, alarm.id, hour, minute, name, soundName, vibrate, days, true)
+                scheduleAlarm(context, alarm.id, hour, minute, name, soundName, vibrate, days, true, discordWebhookUrl)
             }
             .onFailure { Log.e("AlarmVM", "Mise à jour échouée", it) }
     }
@@ -88,7 +90,7 @@ class AlarmViewModel(
             .onSuccess {
                 if (enabled) {
                     scheduleAlarm(context, alarm.id, alarm.hour, alarm.minute,
-                        alarm.name, alarm.soundName, alarm.vibrate, alarm.days, true)
+                        alarm.name, alarm.soundName, alarm.vibrate, alarm.days, true, alarm.discordWebhookUrl)
                 } else {
                     cancelAlarm(context, alarm.id)
                 }
@@ -108,7 +110,7 @@ class AlarmViewModel(
             val currentAlarms = alarms.value
             currentAlarms.filter { it.enabled }.forEach { alarm ->
                 scheduleAlarm(context, alarm.id, alarm.hour, alarm.minute,
-                    alarm.name, alarm.soundName, alarm.vibrate, alarm.days, true)
+                    alarm.name, alarm.soundName, alarm.vibrate, alarm.days, true, alarm.discordWebhookUrl)
             }
         }
     }
@@ -123,7 +125,8 @@ class AlarmViewModel(
             soundName: String,
             vibrate: Boolean,
             days: List<Int>,
-            enabled: Boolean
+            enabled: Boolean,
+            discordWebhookUrl: String = ""
         ) {
             if (!enabled) return
 
@@ -135,6 +138,7 @@ class AlarmViewModel(
                 putExtra("alarm_name", name)
                 putExtra("alarm_sound", soundName)
                 putExtra("alarm_vibrate", vibrate)
+                putExtra("alarm_webhook_url", discordWebhookUrl)
             }
             val pendingIntent = PendingIntent.getBroadcast(
                 context, requestCode, intent,
@@ -214,7 +218,8 @@ class AlarmViewModel(
             name: String,
             soundName: String,
             vibrate: Boolean,
-            minutesLater: Int = 10
+            minutesLater: Int = 10,
+            discordWebhookUrl: String = ""
         ) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val requestCode = (alarmId + "_snooze").hashCode()
@@ -224,6 +229,7 @@ class AlarmViewModel(
                 putExtra("alarm_name", name)
                 putExtra("alarm_sound", soundName)
                 putExtra("alarm_vibrate", vibrate)
+                putExtra("alarm_webhook_url", discordWebhookUrl)
             }
             val pendingIntent = PendingIntent.getBroadcast(
                 context, requestCode, intent,

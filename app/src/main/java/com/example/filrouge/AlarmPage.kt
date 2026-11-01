@@ -309,7 +309,7 @@ fun AlarmEditDialog(
     existingAlarm: Alarm? = null, // null = création, non-null = édition
     contactsList: List<Contact>,
     onDismiss: () -> Unit,
-    onConfirm: (hour: Int, minute: Int, name: String, days: List<Int>, soundName: String, vibrate: Boolean, contacts: List<String>) -> Unit
+    onConfirm: (hour: Int, minute: Int, name: String, days: List<Int>, soundName: String, vibrate: Boolean, contacts: List<String>, discordWebhookUrl: String) -> Unit
 ) {
     val isEdit = existingAlarm != null
     val dialogTitle = if (isEdit) "Modifier l'alarme" else "Nouvelle Alarme"
@@ -323,6 +323,7 @@ fun AlarmEditDialog(
     var selectedDays by remember { mutableStateOf(existingAlarm?.days ?: emptyList<Int>()) }
     var soundName by remember { mutableStateOf(existingAlarm?.soundName ?: "aura_tone") }
     var vibrate by remember { mutableStateOf(existingAlarm?.vibrate ?: false) }
+    var discordWebhookUrl by remember { mutableStateOf(existingAlarm?.discordWebhookUrl ?: "") }
     var showSoundPicker by remember { mutableStateOf(false) }
 
     var selectedContacts by remember { mutableStateOf(existingAlarm?.participantIds ?: emptyList<String>()) }
@@ -437,6 +438,22 @@ fun AlarmEditDialog(
                     Text("Vibreur", fontWeight = FontWeight.Medium, color = textColor, fontSize = 14.sp)
                     Switch(checked = vibrate, onCheckedChange = { vibrate = it })
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Webhook Discord
+                OutlinedTextField(
+                    value = discordWebhookUrl,
+                    onValueChange = { discordWebhookUrl = it },
+                    label = { Text("Webhook Discord (facultatif)") },
+                    placeholder = { Text("https://discord.com/api/webhooks/...") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -455,7 +472,7 @@ fun AlarmEditDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(timeState.hour, timeState.minute, name, selectedDays, soundName, vibrate, selectedContacts) },
+                onClick = { onConfirm(timeState.hour, timeState.minute, name, selectedDays, soundName, vibrate, selectedContacts, discordWebhookUrl) },
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                 shape = RoundedCornerShape(12.dp)
             ) { Text(if (isEdit) "Enregistrer" else "Créer", color = Color.White) }

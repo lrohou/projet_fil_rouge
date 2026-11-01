@@ -18,7 +18,8 @@ data class Alarm(
     val days: List<Int> = emptyList(),
     val soundName: String = "aura_tone",
     val vibrate: Boolean = false,
-    val participantIds: List<String> = emptyList()
+    val participantIds: List<String> = emptyList(),
+    val discordWebhookUrl: String = ""
 ) {
     @get:Exclude
     val time: String get() = "%d:%02d".format(hour, minute)

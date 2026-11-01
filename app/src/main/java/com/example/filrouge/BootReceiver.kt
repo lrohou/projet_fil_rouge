@@ -33,7 +33,7 @@ class BootReceiver : BroadcastReceiver() {
                 alarms.filter { it.enabled }.forEach { alarm ->
                     com.example.filrouge.viewModels.AlarmViewModel.scheduleAlarm(
                         context, alarm.id, alarm.hour, alarm.minute,
-                        alarm.name, alarm.soundName, alarm.vibrate, alarm.days, true
+                        alarm.name, alarm.soundName, alarm.vibrate, alarm.days, true, alarm.discordWebhookUrl
                     )
                 }
                 Log.d("BootReceiver", "${alarms.count { it.enabled }} alarmes reprogrammées")

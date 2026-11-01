@@ -67,7 +67,8 @@ class AlarmRepository(
         days: List<Int>,
         soundName: String,
         vibrate: Boolean,
-        contacts: List<String>
+        contacts: List<String>,
+        discordWebhookUrl: String = ""
     ): Result<String> = runCatching {
         val uid = auth.currentUser?.uid ?: error("Utilisateur non connecté")
         val currentUser = auth.currentUser
@@ -90,6 +91,7 @@ class AlarmRepository(
                 "soundName" to soundName,
                 "vibrate" to vibrate,
                 "participantIds" to listOf(uid),
+                "discordWebhookUrl" to discordWebhookUrl,
                 "createdAt" to FieldValue.serverTimestamp()
             )
         ).await()
@@ -122,7 +124,8 @@ class AlarmRepository(
         days: List<Int>,
         soundName: String,
         vibrate: Boolean,
-        contacts: List<String>
+        contacts: List<String>,
+        discordWebhookUrl: String = ""
     ): Result<Unit> = runCatching {
         val uid = auth.currentUser?.uid ?: error("Utilisateur non connecté")
         val currentUser = auth.currentUser
@@ -141,7 +144,8 @@ class AlarmRepository(
                 "name" to name,
                 "days" to days,
                 "soundName" to soundName,
-                "vibrate" to vibrate
+                "vibrate" to vibrate,
+                "discordWebhookUrl" to discordWebhookUrl
             )
         ).await()
 

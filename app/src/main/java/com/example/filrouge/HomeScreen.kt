@@ -74,8 +74,8 @@ fun HomeScreen(
             existingAlarm = null,
             contactsList = realContacts, // 2. Ajout de la liste de contacts ici
             onDismiss = { showNewAlarmDialog = false },
-            onConfirm = { hour, minute, name, days, soundName, vibrate, contacts ->
-                alarmViewModel.createAlarm(context, hour, minute, name, days, soundName, vibrate, contacts)
+            onConfirm = { hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl ->
+                alarmViewModel.createAlarm(context, hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl)
                 showNewAlarmDialog = false
             }
         )
@@ -88,8 +88,8 @@ fun HomeScreen(
             existingAlarm = alarm,
             contactsList = realContacts, // 3. Ajout de la liste de contacts ici
             onDismiss = { editingAlarm = null },
-            onConfirm = { hour, minute, name, days, soundName, vibrate, contacts ->
-                alarmViewModel.updateAlarm(context, alarm, hour, minute, name, days, soundName, vibrate, contacts)
+            onConfirm = { hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl ->
+                alarmViewModel.updateAlarm(context, alarm, hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl)
                 editingAlarm = null
             }
         )

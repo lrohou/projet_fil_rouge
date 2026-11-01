@@ -63,12 +63,13 @@ class AlarmReceiver : BroadcastReceiver() {
             val alarmName = intent.getStringExtra("alarm_name") ?: "Alarme"
             val soundName = intent.getStringExtra("alarm_sound") ?: "aura_tone"
             val shouldVibrate = intent.getBooleanExtra("alarm_vibrate", false)
+            val alarmWebhookUrl = intent.getStringExtra("alarm_webhook_url") ?: ""
 
             val newCount = com.example.filrouge.data.SnoozeManager.incrementSnoozeCount(context, alarmId)
 
             //envoie de la notification Discord
             val userName = com.example.filrouge.data.SnoozeManager.getUserName(context)
-            com.example.filrouge.data.SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount)
+            com.example.filrouge.data.SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount, alarmWebhookUrl)
 
             com.example.filrouge.viewModels.AlarmViewModel.scheduleSnooze(
                 context = context,
@@ -76,7 +77,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 name = alarmName,
                 soundName = soundName,
                 vibrate = shouldVibrate,
-                minutesLater = 10
+                minutesLater = 10,
+                discordWebhookUrl = alarmWebhookUrl
             )
             return
         }
@@ -85,6 +87,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val alarmName = intent.getStringExtra("alarm_name") ?: "Alarme"
         val soundName = intent.getStringExtra("alarm_sound") ?: "aura_tone"
         val shouldVibrate = intent.getBooleanExtra("alarm_vibrate", false)
+        val alarmWebhookUrl = intent.getStringExtra("alarm_webhook_url") ?: ""
 
         Log.d("AlarmReceiver", "Alarme reçue : $alarmName (son=$soundName, vibrer=$shouldVibrate)")
 
@@ -118,6 +121,7 @@ class AlarmReceiver : BroadcastReceiver() {
             putExtra("alarm_name", alarmName)
             putExtra("alarm_sound", soundName)
             putExtra("alarm_vibrate", shouldVibrate)
+            putExtra("alarm_webhook_url", alarmWebhookUrl)
         }
 
         val fullScreenPendingIntent = PendingIntent.getActivity(
@@ -142,6 +146,7 @@ class AlarmReceiver : BroadcastReceiver() {
             putExtra("alarm_name", alarmName)
             putExtra("alarm_sound", soundName)
             putExtra("alarm_vibrate", shouldVibrate)
+            putExtra("alarm_webhook_url", alarmWebhookUrl)
         }
         val snoozePendingIntent = PendingIntent.getBroadcast(
             context, (alarmId + "_snooze_notif").hashCode(), snoozeIntent,

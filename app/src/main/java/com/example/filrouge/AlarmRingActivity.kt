@@ -65,6 +65,7 @@ class AlarmRingActivity : ComponentActivity() {
         val alarmName = intent.getStringExtra("alarm_name") ?: "Alarme"
         val soundName = intent.getStringExtra("alarm_sound") ?: "aura_tone"
         val shouldVibrate = intent.getBooleanExtra("alarm_vibrate", false)
+        val alarmWebhookUrl = intent.getStringExtra("alarm_webhook_url") ?: ""
 
         val snoozeCount = SnoozeManager.getSnoozeCount(this, alarmId)
 
@@ -91,7 +92,7 @@ class AlarmRingActivity : ComponentActivity() {
 
                         // Envoyer la notification Discord
                         val userName = SnoozeManager.getUserName(this)
-                        SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount)
+                        SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount, alarmWebhookUrl)
 
                         AlarmViewModel.scheduleSnooze(
                             context = this,
@@ -99,7 +100,8 @@ class AlarmRingActivity : ComponentActivity() {
                             name = alarmName,
                             soundName = soundName,
                             vibrate = shouldVibrate,
-                            minutesLater = 10
+                            minutesLater = 10,
+                            discordWebhookUrl = alarmWebhookUrl
                         )
 
                         Toast.makeText(
