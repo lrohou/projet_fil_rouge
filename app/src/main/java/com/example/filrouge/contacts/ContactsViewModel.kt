@@ -13,29 +13,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class AppUser(
-    val uid: String = "",
-    val displayName: String = "",
-    val email: String = ""
-)
-// Fichier séparé
-
-data class FriendRequest(
-    val friendshipId: String,
-    val from: AppUser
-)
-
-data class ContactsUiState(
-    val users: List<AppUser> = emptyList(),
-    val filteredUsers: List<AppUser> = emptyList(),
-    val isLoading: Boolean = false,
-    val searchQuery: String = "",
-    val friendRequestsSent: Set<String> = emptySet(),
-    val friendIds: Set<String> = emptySet(),
-    val incomingRequests: List<FriendRequest> = emptyList(),
-    val error: String? = null
-)
-
 class ContactsViewModel(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),

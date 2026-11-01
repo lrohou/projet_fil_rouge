@@ -12,18 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import java.util.TimeZone
-
 import com.google.firebase.firestore.ListenerRegistration
-
-data class ProfileUiState(
-    val userId: String = "",
-    val displayName: String = "",
-    val email: String = "",
-    val timeZone: String = "",
-    val activeAlarmsCount: Int = 0,
-    val isCurrentUser: Boolean = true,
-    val isLoading: Boolean = false
-)
 
 class ProfileViewModel(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
