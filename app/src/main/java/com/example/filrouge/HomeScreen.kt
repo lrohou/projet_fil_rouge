@@ -22,11 +22,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.filrouge.data.Alarm
+import com.example.filrouge.alarms.Alarm
+import com.example.filrouge.alarms.AlarmEditDialog
+import com.example.filrouge.alarms.AlarmPageContent
 import com.example.filrouge.ui.theme.FilRougeTheme
-import com.example.filrouge.viewModels.AlarmViewModel
+import com.example.filrouge.alarms.AlarmViewModel
+import com.example.filrouge.alarms.AppNotification
+import com.example.filrouge.alarms.DarkBlue
+import com.example.filrouge.alarms.NavBarBlue
+import com.example.filrouge.alarms.NotificationType
+import com.example.filrouge.contacts.Contact
+import com.example.filrouge.contacts.ContactsPageContent
 import kotlinx.coroutines.launch
-import com.example.filrouge.viewModels.ContactsViewModel
+import com.example.filrouge.contacts.ContactsViewModel
+import com.example.filrouge.settings.SettingsPageContent
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -75,7 +84,17 @@ fun HomeScreen(
             contactsList = realContacts, // 2. Ajout de la liste de contacts ici
             onDismiss = { showNewAlarmDialog = false },
             onConfirm = { hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl ->
-                alarmViewModel.createAlarm(context, hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl)
+                alarmViewModel.createAlarm(
+                    context,
+                    hour,
+                    minute,
+                    name,
+                    days,
+                    soundName,
+                    vibrate,
+                    contacts,
+                    discordWebhookUrl
+                )
                 showNewAlarmDialog = false
             }
         )
@@ -89,7 +108,18 @@ fun HomeScreen(
             contactsList = realContacts, // 3. Ajout de la liste de contacts ici
             onDismiss = { editingAlarm = null },
             onConfirm = { hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl ->
-                alarmViewModel.updateAlarm(context, alarm, hour, minute, name, days, soundName, vibrate, contacts, discordWebhookUrl)
+                alarmViewModel.updateAlarm(
+                    context,
+                    alarm,
+                    hour,
+                    minute,
+                    name,
+                    days,
+                    soundName,
+                    vibrate,
+                    contacts,
+                    discordWebhookUrl
+                )
                 editingAlarm = null
             }
         )
@@ -226,7 +256,13 @@ fun HomeScreen(
                         1 -> AlarmPageContent(
                             alarms = alarms,
                             isDarkTheme = isDarkTheme,
-                            onToggle = { alarm, checked -> alarmViewModel.setEnabled(context, alarm, checked) },
+                            onToggle = { alarm, checked ->
+                                alarmViewModel.setEnabled(
+                                    context,
+                                    alarm,
+                                    checked
+                                )
+                            },
                             onDelete = { alarm -> alarmViewModel.delete(context, alarm) },
                             onNewAlarmClick = { showNewAlarmDialog = true },
                             onEditAlarm = { alarm -> editingAlarm = alarm }

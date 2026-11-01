@@ -1,4 +1,4 @@
-package com.example.filrouge.viewModels
+package com.example.filrouge.alarms
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -8,10 +8,6 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.filrouge.AlarmReceiver
-import com.example.filrouge.data.Alarm
-import com.example.filrouge.data.AlarmInvitation
-import com.example.filrouge.data.AlarmRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -209,7 +205,7 @@ class AlarmViewModel(
             )
             alarmManager.cancel(pendingIntent)
             cancelSnooze(context, alarmId)
-            com.example.filrouge.data.SnoozeManager.resetSnoozeCount(context, alarmId)
+            SnoozeManager.resetSnoozeCount(context, alarmId)
         }
 
         fun scheduleSnooze(

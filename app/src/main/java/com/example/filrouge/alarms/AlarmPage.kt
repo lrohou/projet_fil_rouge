@@ -1,6 +1,5 @@
-package com.example.filrouge
+package com.example.filrouge.alarms
 
-import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
@@ -31,14 +30,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.filrouge.data.Alarm
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.filrouge.ui.theme.FilRougeTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Close
-import com.example.filrouge.data.AlarmInvitation
+import com.example.filrouge.contacts.Contact
+import com.example.filrouge.R
 
 //couleurs de l'application
 val LightBlue = Color(0xFFD0EBFF)

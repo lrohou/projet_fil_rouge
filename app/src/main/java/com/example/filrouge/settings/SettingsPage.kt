@@ -1,4 +1,4 @@
-package com.example.filrouge
+package com.example.filrouge.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.filrouge.alarms.DarkBlue
 
 // Contenu de la page Paramètres
 @Composable

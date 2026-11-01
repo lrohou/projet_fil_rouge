@@ -1,6 +1,7 @@
-package com.example.filrouge
+package com.example.filrouge.alarms
 
 import android.app.ActivityOptions
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -17,6 +18,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.example.filrouge.R
 
 class AlarmReceiver : BroadcastReceiver() {
 
@@ -46,8 +48,8 @@ class AlarmReceiver : BroadcastReceiver() {
             stopAlarm()
             val alarmId = intent.getStringExtra("alarm_id")
             if (!alarmId.isNullOrEmpty()) {
-                com.example.filrouge.data.SnoozeManager.resetSnoozeCount(context, alarmId)
-                com.example.filrouge.viewModels.AlarmViewModel.cancelSnooze(context, alarmId)
+                SnoozeManager.resetSnoozeCount(context, alarmId)
+                AlarmViewModel.cancelSnooze(context, alarmId)
             }
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.cancel(NOTIFICATION_ID)
@@ -65,13 +67,13 @@ class AlarmReceiver : BroadcastReceiver() {
             val shouldVibrate = intent.getBooleanExtra("alarm_vibrate", false)
             val alarmWebhookUrl = intent.getStringExtra("alarm_webhook_url") ?: ""
 
-            val newCount = com.example.filrouge.data.SnoozeManager.incrementSnoozeCount(context, alarmId)
+            val newCount = SnoozeManager.incrementSnoozeCount(context, alarmId)
 
             //envoie de la notification Discord
-            val userName = com.example.filrouge.data.SnoozeManager.getUserName(context)
-            com.example.filrouge.data.SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount, alarmWebhookUrl)
+            val userName = SnoozeManager.getUserName(context)
+            SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount, alarmWebhookUrl)
 
-            com.example.filrouge.viewModels.AlarmViewModel.scheduleSnooze(
+            AlarmViewModel.scheduleSnooze(
                 context = context,
                 alarmId = alarmId,
                 name = alarmName,
@@ -202,7 +204,7 @@ class AlarmReceiver : BroadcastReceiver() {
         ).apply {
             description = "Notifications d'alarme"
             setBypassDnd(true)
-            lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.createNotificationChannel(channel)

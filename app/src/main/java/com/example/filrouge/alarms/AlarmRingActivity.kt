@@ -1,8 +1,7 @@
-package com.example.filrouge
+package com.example.filrouge.alarms
 
 import android.app.KeyguardManager
 import android.app.NotificationManager
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
@@ -26,9 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.example.filrouge.data.SnoozeManager
 import com.example.filrouge.ui.theme.FilRougeTheme
-import com.example.filrouge.viewModels.AlarmViewModel
 
 
 class AlarmRingActivity : ComponentActivity() {
@@ -45,7 +42,7 @@ class AlarmRingActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
-            val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+            val keyguardManager = getSystemService(KEYGUARD_SERVICE) as? KeyguardManager
             keyguardManager?.requestDismissKeyguard(this, null)
         } else {
             @Suppress("DEPRECATION")

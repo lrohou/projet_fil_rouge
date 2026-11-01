@@ -1,9 +1,8 @@
-package com.example.filrouge.data
+package com.example.filrouge.alarms
 
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
-import java.time.LocalDate
 import java.time.LocalTime
 
 @IgnoreExtraProperties

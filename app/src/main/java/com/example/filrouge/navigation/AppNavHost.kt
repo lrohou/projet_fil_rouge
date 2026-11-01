@@ -1,4 +1,4 @@
-package com.example.filrouge
+package com.example.filrouge.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -7,6 +7,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.filrouge.HomeScreen
+import com.example.filrouge.LoginScreen
+import com.example.filrouge.auth.SignUpScreen
+import com.example.filrouge.settings.ProfileScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable

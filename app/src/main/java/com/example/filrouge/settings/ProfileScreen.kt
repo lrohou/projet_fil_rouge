@@ -1,4 +1,4 @@
-package com.example.filrouge
+package com.example.filrouge.settings
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,10 +22,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.filrouge.data.SnoozeManager
+import com.example.filrouge.R
+import com.example.filrouge.alarms.CardBlue
+import com.example.filrouge.alarms.DarkBlue
+import com.example.filrouge.alarms.SnoozeManager
 import com.example.filrouge.ui.theme.FilRougeTheme
-import com.example.filrouge.viewModels.ProfileUiState
-import com.example.filrouge.viewModels.ProfileViewModel
 
 // Page profil de l'utilisateur
 @Composable

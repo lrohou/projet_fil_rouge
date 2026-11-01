@@ -1,10 +1,8 @@
-package com.example.filrouge.viewModels
+package com.example.filrouge.contacts
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.filrouge.data.FriendRepository
-import com.example.filrouge.data.Friendship
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration

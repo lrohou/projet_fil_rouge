@@ -1,4 +1,4 @@
-package com.example.filrouge.data
+package com.example.filrouge.auth
 
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth

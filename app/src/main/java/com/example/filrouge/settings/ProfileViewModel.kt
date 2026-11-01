@@ -1,9 +1,9 @@
-package com.example.filrouge.viewModels
+package com.example.filrouge.settings
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.filrouge.data.AlarmRepository
+import com.example.filrouge.alarms.AlarmRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,4 +1,4 @@
-package com.example.filrouge.data
+package com.example.filrouge.alarms
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
@@ -27,7 +27,11 @@ class AlarmRepository(
             .whereArrayContains("participantIds", uid)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e("AlarmRepository", "Erreur Firestore snapshot listener: ${error.message}", error)
+                    Log.e(
+                        "AlarmRepository",
+                        "Erreur Firestore snapshot listener: ${error.message}",
+                        error
+                    )
                     trySend(emptyList())
                     return@addSnapshotListener
                 }

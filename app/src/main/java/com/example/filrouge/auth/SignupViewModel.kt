@@ -1,4 +1,4 @@
-package com.example.filrouge.viewModels
+package com.example.filrouge.auth
 
 import android.util.Patterns
 import androidx.compose.runtime.getValue
@@ -6,8 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.filrouge.data.AuthRepository
-import com.example.filrouge.data.toAuthMessage
 import kotlinx.coroutines.launch
 
 class SignUpViewModel(

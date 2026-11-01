@@ -1,4 +1,4 @@
-package com.example.filrouge.data
+package com.example.filrouge.contacts
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentId

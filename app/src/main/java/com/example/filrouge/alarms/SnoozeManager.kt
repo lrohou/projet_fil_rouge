@@ -1,7 +1,8 @@
-package com.example.filrouge.data
+package com.example.filrouge.alarms
 
 import android.content.Context
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,7 +25,7 @@ object SnoozeManager {
         val saved = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getString(KEY_USER_NAME, null)
         if (!saved.isNullOrBlank()) return saved
-        return com.google.firebase.auth.FirebaseAuth.getInstance()
+        return FirebaseAuth.getInstance()
             .currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "Utilisateur"
     }
 

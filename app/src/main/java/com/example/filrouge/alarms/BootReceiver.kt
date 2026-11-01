@@ -1,10 +1,9 @@
-package com.example.filrouge
+package com.example.filrouge.alarms
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.example.filrouge.data.AlarmRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
@@ -29,9 +28,9 @@ class BootReceiver : BroadcastReceiver() {
                     .get()
                     .await()
 
-                val alarms = snapshot.toObjects(com.example.filrouge.data.Alarm::class.java)
+                val alarms = snapshot.toObjects(Alarm::class.java)
                 alarms.filter { it.enabled }.forEach { alarm ->
-                    com.example.filrouge.viewModels.AlarmViewModel.scheduleAlarm(
+                    AlarmViewModel.scheduleAlarm(
                         context, alarm.id, alarm.hour, alarm.minute,
                         alarm.name, alarm.soundName, alarm.vibrate, alarm.days, true, alarm.discordWebhookUrl
                     )

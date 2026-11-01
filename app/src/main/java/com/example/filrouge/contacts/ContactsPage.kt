@@ -1,4 +1,4 @@
-package com.example.filrouge
+package com.example.filrouge.contacts
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -25,8 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.filrouge.viewModels.AppUser
-import com.example.filrouge.viewModels.ContactsViewModel
+import com.example.filrouge.R
+import com.example.filrouge.alarms.CardBlue
+import com.example.filrouge.alarms.DarkBlue
 
 //modèle de données pour un contact
 data class Contact(val uid: String, val name: String, val subtitle: String)

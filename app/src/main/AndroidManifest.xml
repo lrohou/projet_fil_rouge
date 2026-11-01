@@ -37,7 +37,7 @@
 
         <!-- Activité plein écran quand l'alarme sonne -->
         <activity
-            android:name=".AlarmRingActivity"
+            android:name=".alarms.AlarmRingActivity"
             android:exported="false"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
@@ -49,12 +49,12 @@
 
         <!-- Receiver pour déclencher l'alarme -->
         <receiver
-            android:name=".AlarmReceiver"
+            android:name=".alarms.AlarmReceiver"
             android:exported="false" />
 
         <!-- Receiver pour reprogrammer après redémarrage -->
         <receiver
-            android:name=".BootReceiver"
+            android:name=".alarms.BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

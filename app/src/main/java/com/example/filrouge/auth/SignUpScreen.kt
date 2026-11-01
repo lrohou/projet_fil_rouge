@@ -1,4 +1,4 @@
-package com.example.filrouge
+package com.example.filrouge.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +26,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.filrouge.viewModels.SignUpViewModel
 
 @Composable
 fun SignUpScreen(
