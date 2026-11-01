@@ -14,66 +14,70 @@ import com.example.filrouge.settings.ProfileScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun AppNavHost(
+fun AppNavigation(
     isDarkTheme: Boolean = false,
     onToggleDarkTheme: (Boolean) -> Unit = {}
 ) {
     val navController = rememberNavController()
 
     val startDestination = remember {
-        if (FirebaseAuth.getInstance().currentUser != null) "home" else "login"
+        if (FirebaseAuth.getInstance().currentUser != null) Routes.HOME else Routes.LOGIN
     }
 
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
 
-        composable("login") {
+        composable(Routes.LOGIN) {
             LoginScreen(
                 onNavigateToHome = {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
-                onNavigateToSignUp = { navController.navigate("signup") }
+                onNavigateToSignUp = { navController.navigate(Routes.SIGNUP) }
             )
         }
 
-        composable("signup") {
+        composable(Routes.SIGNUP) {
             SignUpScreen(
                 onSignedUp = {
-                    navController.navigate("home") {
-                        // Retire "signup" ET "login" de la pile
-                        popUpTo("login") { inclusive = true }
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
                 onBack = { navController.popBackStack() }
             )
         }
 
-        composable("home") {
+        composable(Routes.HOME) {
             HomeScreen(
                 isDarkTheme = isDarkTheme,
                 onToggleDarkTheme = onToggleDarkTheme,
-                onNavigateToProfile = { navController.navigate("profile") },
-                onNavigateToUserProfile = { uid -> navController.navigate("profile/$uid") }
+                onNavigateToProfile = { navController.navigate(Routes.PROFILE) },
+                onNavigateToUserProfile = { uid ->
+                    navController.navigate(Routes.userProfilePath(uid))
+                }
             )
         }
 
-        composable("profile") {
+        composable(Routes.PROFILE) {
             ProfileScreen(
                 userId = null,
                 isDarkTheme = isDarkTheme,
                 onBack = { navController.popBackStack() },
                 onLogout = {
                     FirebaseAuth.getInstance().signOut()
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.HOME) { inclusive = true }
                     }
                 }
             )
         }
 
         composable(
-            route = "profile/{userId}",
+            route = Routes.USER_PROFILE,
             arguments = listOf(navArgument("userId") { type = NavType.StringType })
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId")
@@ -83,8 +87,8 @@ fun AppNavHost(
                 onBack = { navController.popBackStack() },
                 onLogout = {
                     FirebaseAuth.getInstance().signOut()
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.HOME) { inclusive = true }
                     }
                 }
             )

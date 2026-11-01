@@ -61,7 +61,7 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
-import com.example.filrouge.navigation.AppNavHost
+import com.example.filrouge.navigation.AppNavigation
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 
@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
             }.collectAsState(initial = false)
 
             FilRougeTheme(darkTheme = isDarkTheme, dynamicColor = false) {
-                AppNavHost(
+                AppNavigation(
                     isDarkTheme = isDarkTheme,
                     onToggleDarkTheme = { newValue ->
                         scope.launch {
