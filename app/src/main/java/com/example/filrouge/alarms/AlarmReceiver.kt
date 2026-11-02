@@ -214,8 +214,10 @@ class AlarmReceiver : BroadcastReceiver() {
         stopAlarm() //arrêter tout son précédent
 
         try {
+            //si goofy_random, choisir un son aléatoire dans la liste goofy
+            val actualSound = if (soundName == GOOFY_RANDOM) goofySounds.random() else soundName
             //chercher la ressource raw correspondante
-            val resId = context.resources.getIdentifier(soundName, "raw", context.packageName)
+            val resId = context.resources.getIdentifier(actualSound, "raw", context.packageName)
             if (resId != 0) {
                 mediaPlayer = MediaPlayer().apply {
                     val afd = context.resources.openRawResourceFd(resId)

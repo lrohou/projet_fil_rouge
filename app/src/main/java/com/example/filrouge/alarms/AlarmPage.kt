@@ -69,9 +69,22 @@ val availableSounds = listOf(
     "slow_morning"
 )
 
+//sons goofy (fichiers dans res/raw préfixés goofy_)
+val goofySounds = listOf(
+    "goofy_bing_chilling",
+    "goofy_cat_laugh_meme",
+    "goofy_dababy",
+    "goofy_larry",
+    "goofy_oi",
+    "goofy_spiderman"
+)
+const val GOOFY_RANDOM = "goofy_random"
+
 //noms des sons
-fun soundDisplayName(name: String): String = name.replace("_", " ")
-    .replaceFirstChar { it.uppercase() }
+fun soundDisplayName(name: String): String = when (name) {
+    GOOFY_RANDOM -> "🤪 Je suis complètement crazy"
+    else -> name.replace("_", " ").replaceFirstChar { it.uppercase() }
+}
 
 //contenu de la page Alarmes (accueil)
 @Composable
@@ -164,7 +177,9 @@ fun AlarmPageContent(
         Card(
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = cardColor),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onNewAlarmClick)
         ) {
             Row(
                 modifier = Modifier
@@ -181,11 +196,11 @@ fun AlarmPageContent(
                     lineHeight = 32.sp
                 )
                 //icône + dans un cercle blanc
-                IconButton(
-                    onClick = onNewAlarmClick,
+                Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(Color.White, CircleShape)
+                        .background(Color.White, CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.plus),
@@ -640,6 +655,35 @@ fun SoundPickerDialog(
                                     tint = DarkBlue
                                 )
                             }
+                        }
+                    }
+                }
+
+                // Option "Je suis complètement crazy" (son goofy aléatoire)
+                item {
+                    val isSelected = currentSound == GOOFY_RANDOM
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isSelected) DarkBlue.copy(alpha = 0.2f) else Color.Transparent,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(GOOFY_RANDOM) }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isSelected) {
+                                Text("✓ ", color = DarkBlue, fontWeight = FontWeight.Bold)
+                            }
+                            Text(
+                                text = soundDisplayName(GOOFY_RANDOM),
+                                color = if (isSelected) DarkBlue else textColor,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
                         }
                     }
                 }

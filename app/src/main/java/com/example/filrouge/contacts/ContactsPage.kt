@@ -113,20 +113,12 @@ fun ContactsPageContent(
                         fontWeight = FontWeight.Bold,
                         color = textColor
                     )
-                    //icône + dans un cercle bleu foncé
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(DarkBlue, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "+",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    //icône + (même image que dans la liste de contacts)
+                    Image(
+                        painter = painterResource(id = R.drawable.plus),
+                        contentDescription = "Ajouter un contact",
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
             }
         }
