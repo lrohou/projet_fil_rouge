@@ -205,35 +205,6 @@ fun HomeScreen(
                         )
                     }
 
-                    // Barre de recherche (uniquement sur la page Paramètres, modifiable par l'utilisateur)
-                    if (pagerState.currentPage == 2) {
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            placeholder = {
-                                Text(
-                                    "recherche ...",
-                                    fontSize = 13.sp,
-                                    color = if (isDarkTheme) Color.LightGray else Color.Gray
-                                )
-                            },
-                            singleLine = true,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 8.dp)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = if (isDarkTheme) Color(0xFF243447) else Color(0xFFE8F1F8),
-                                unfocusedContainerColor = if (isDarkTheme) Color(0xFF243447) else Color(0xFFE8F1F8),
-                                focusedTextColor = if (isDarkTheme) Color.White else Color.Black,
-                                unfocusedTextColor = if (isDarkTheme) Color.White else Color.Black,
-                                focusedBorderColor = DarkBlue,
-                                unfocusedBorderColor = Color(0xFF90CAFF)
-                            )
-                        )
-                    }
-
                     // Icône notifications (clic -> afficher/masquer)
                     IconButton(
                         onClick = { showNotifications = !showNotifications },

@@ -38,55 +38,6 @@ fun SettingsPageContent(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Section Langue
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Langue",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = textColor
-            )
-
-            // Bouton FR
-            Button(
-                onClick = { selectedLang = "FR" },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (selectedLang == "FR") DarkBlue else Color.LightGray
-                ),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "FR",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-            }
-
-            // Bouton EN
-            Button(
-                onClick = { selectedLang = "EN" },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (selectedLang == "EN") DarkBlue else Color.LightGray
-                ),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "EN",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Section Choix du Thème (Clair / Sombre)
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -136,61 +87,6 @@ fun SettingsPageContent(
 
         Spacer(modifier = Modifier.height(16.dp))
         HorizontalDivider(color = dividerColor, thickness = 2.dp)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Options de compte
-        Text(
-            text = "Changer mon mot de passe",
-            fontSize = 16.sp,
-            color = textColor,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-        Text(
-            text = "Changer mon fuseau horaire",
-            fontSize = 16.sp,
-            color = textColor,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-        HorizontalDivider(color = dividerColor, thickness = 2.dp)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Section Aide & Suppression
-        Text(
-            text = "Aide",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = textColor
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Supprimer mon compte",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = textColor,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-        HorizontalDivider(color = dividerColor, thickness = 2.dp)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Liens en bas
-        Text(
-            text = "À propos",
-            fontSize = 16.sp,
-            color = textColor,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-        Text(
-            text = "Mentions légales",
-            fontSize = 16.sp,
-            color = textColor,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
 
         Spacer(modifier = Modifier.height(24.dp))
     }
