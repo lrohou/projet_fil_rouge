@@ -8,6 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel de l'écran de connexion.
+ * Gère la validation des champs, l'état du chargement et les opérations de connexion / mot de passe oublié.
+ */
 class LoginViewModel(
     private val repo: AuthRepository = AuthRepository()
 ) : ViewModel() {
@@ -26,8 +30,10 @@ class LoginViewModel(
     fun onUsernameChange(value: String) { username = value; errorMessage = null }
     fun onPasswordChange(value: String) { password = value; errorMessage = null }
 
+    /** Vérifie la validité du format d'adresse e-mail */
     private fun emailValid() = Patterns.EMAIL_ADDRESS.matcher(username.trim()).matches()
 
+    /** Déclenche la tentative de connexion e-mail/mot de passe */
     fun signIn(onSuccess: () -> Unit) {
         if (!emailValid()) { errorMessage = "Adresse e-mail invalide"; return }
         if (password.length < 6) { errorMessage = "6 caractères minimum"; return }
@@ -40,6 +46,7 @@ class LoginViewModel(
         }
     }
 
+    /** Déclenche l'authentification avec Google */
     fun signInWithGoogle(idToken: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isLoading = true
@@ -52,10 +59,12 @@ class LoginViewModel(
         }
     }
 
+    /** Gère l'échec d'initialisation de Google Sign-In */
     fun onGoogleError() {
         errorMessage = "Connexion Google impossible"
     }
 
+    /** Envoie un e-mail de réinitialisation de mot de passe à l'adresse renseignée */
     fun resetPassword() {
         if (!emailValid()) { errorMessage = "Entre ton e-mail pour réinitialiser"; return }
         viewModelScope.launch {

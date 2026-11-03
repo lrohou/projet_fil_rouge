@@ -27,6 +27,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+/**
+ * Écran de création d'un nouveau compte utilisateur.
+ * Contient les champs pseudo, adresse e-mail, mot de passe et le bouton de validation.
+ */
 @Composable
 fun SignUpScreen(
     onSignedUp: () -> Unit,

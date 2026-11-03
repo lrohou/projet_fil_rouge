@@ -37,6 +37,12 @@ import kotlinx.coroutines.launch
 import com.example.filrouge.contacts.ContactsViewModel
 import com.example.filrouge.settings.SettingsPageContent
 
+/**
+ * Écran principal de l'application (Conteneur principal).
+ * Gère la navigation par balayage (HorizontalPager) entre les 3 onglets principaux :
+ * 0: Contacts, 1: Alarmes, 2: Paramètres.
+ * Intègre également la barre supérieure (profil, recherche, notifications) et la barre inférieure.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
@@ -300,7 +306,10 @@ fun HomeScreen(
     }
 }
 
-// Dropdown des notifications
+/**
+ * Panneau déroulant de notifications affichant la liste fusionnée des demandes d'amitié
+ * et des invitations aux alarmes partagées avec options d'acceptation ou de refus.
+ */
 @Composable
 fun BoxScope.NotificationDropdown(
     notifications: List<AppNotification>,
@@ -404,7 +413,9 @@ fun BoxScope.NotificationDropdown(
     }
 }
 
-// Barre de navigation
+/**
+ * Barre de navigation inférieure permettant de basculer entre les 3 onglets.
+ */
 @Composable
 fun BottomNavBar(
     currentPage: Int = 1,

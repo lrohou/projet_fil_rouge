@@ -13,6 +13,10 @@ import com.example.filrouge.auth.SignUpScreen
 import com.example.filrouge.settings.ProfileScreen
 import com.google.firebase.auth.FirebaseAuth
 
+/**
+ * Graphe de navigation principal de l'application.
+ * Détermine dynamiquement la destination de départ selon la présence d'une session Firebase Auth active.
+ */
 @Composable
 fun AppNavigation(
     isDarkTheme: Boolean = false,
@@ -20,6 +24,7 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
 
+    // Redirection automatique vers Home si l'utilisateur est déjà connecté, sinon Login
     val startDestination = remember {
         if (FirebaseAuth.getInstance().currentUser != null) Routes.HOME else Routes.LOGIN
     }

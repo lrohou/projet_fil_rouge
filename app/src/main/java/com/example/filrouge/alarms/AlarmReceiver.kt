@@ -20,6 +20,11 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.filrouge.R
 
+/**
+ * BroadcastReceiver déclenché par l'AlarmManager au moment exact du réveil.
+ * Gère le réveil de l'appareil, la sonnerie, les vibrations,
+ * l'affichage de la notification prioritaire et le lancement de l'activité plein écran.
+ */
 class AlarmReceiver : BroadcastReceiver() {
 
     companion object {
@@ -32,6 +37,7 @@ class AlarmReceiver : BroadcastReceiver() {
         var mediaPlayer: MediaPlayer? = null
         var vibrator: Vibrator? = null
 
+        /** Arrête la lecture audio et interrompt les vibrations en cours */
         fun stopAlarm() {
             mediaPlayer?.let {
                 if (it.isPlaying) it.stop()
@@ -44,6 +50,7 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
+        // Traitement de l'action ÉTEINDRE
         if (intent.action == ACTION_STOP) {
             stopAlarm()
             val alarmId = intent.getStringExtra("alarm_id")
@@ -56,6 +63,7 @@ class AlarmReceiver : BroadcastReceiver() {
             return
         }
 
+        // Traitement de l'action SNOOZE
         if (intent.action == ACTION_SNOOZE) {
             stopAlarm()
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -69,10 +77,11 @@ class AlarmReceiver : BroadcastReceiver() {
 
             val newCount = SnoozeManager.incrementSnoozeCount(context, alarmId)
 
-            //envoie de la notification Discord
+            // Envoi de la notification Webhook Discord en tâche de fond
             val userName = SnoozeManager.getUserName(context)
             SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount, alarmWebhookUrl)
 
+            // Programmation du snooze dans 10 minutes
             AlarmViewModel.scheduleSnooze(
                 context = context,
                 alarmId = alarmId,
@@ -85,6 +94,7 @@ class AlarmReceiver : BroadcastReceiver() {
             return
         }
 
+        // Traitement normal du déclenchement de l'alarme
         val alarmId = intent.getStringExtra("alarm_id") ?: return
         val alarmName = intent.getStringExtra("alarm_name") ?: "Alarme"
         val soundName = intent.getStringExtra("alarm_sound") ?: "aura_tone"
@@ -107,8 +117,6 @@ class AlarmReceiver : BroadcastReceiver() {
 
         //jouer le son sur la piste ALARM
         playAlarmSound(context, soundName)
-
-        //vibrer si activé
         if (shouldVibrate) {
             startVibration(context)
         }
@@ -196,6 +204,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
+    /** Crée le canal de notification avec haute priorité et contournement du mode Ne Pas Déranger */
     private fun createNotificationChannel(context: Context) {
         val channel = NotificationChannel(
             CHANNEL_ID,
@@ -210,13 +219,13 @@ class AlarmReceiver : BroadcastReceiver() {
         nm.createNotificationChannel(channel)
     }
 
+    /** Joue le son choisi en boucle sur le flux audio USAGE_ALARM */
     private fun playAlarmSound(context: Context, soundName: String) {
-        stopAlarm() //arrêter tout son précédent
+        stopAlarm()
 
         try {
             //si goofy_random, choisir un son aléatoire dans la liste goofy
             val actualSound = if (soundName == GOOFY_RANDOM) goofySounds.random() else soundName
-            //chercher la ressource raw correspondante
             val resId = context.resources.getIdentifier(actualSound, "raw", context.packageName)
             if (resId != 0) {
                 mediaPlayer = MediaPlayer().apply {
@@ -254,6 +263,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
+    /** Déclenche le motif de vibration répétitif */
     private fun startVibration(context: Context) {
         val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager

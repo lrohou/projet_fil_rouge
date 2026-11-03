@@ -14,7 +14,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.filrouge.alarms.DarkBlue
 
-// Contenu de la page Paramètres
+/**
+ * Contenu principal de l'onglet "Paramètres".
+ * Permet de basculer entre le thème clair et sombre, de choisir la langue et de consulter les options de l'application.
+ */
 @Composable
 fun SettingsPageContent(
     isDarkTheme: Boolean = false,
@@ -135,7 +138,7 @@ fun SettingsPageContent(
         HorizontalDivider(color = dividerColor, thickness = 2.dp)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Options de paramètres
+        // Options de compte
         Text(
             text = "Changer mon mot de passe",
             fontSize = 16.sp,
@@ -153,7 +156,7 @@ fun SettingsPageContent(
         HorizontalDivider(color = dividerColor, thickness = 2.dp)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Section Aide
+        // Section Aide & Suppression
         Text(
             text = "Aide",
             fontSize = 28.sp,

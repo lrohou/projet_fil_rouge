@@ -34,7 +34,10 @@ data class Contact(val uid: String, val name: String, val subtitle: String)
 
 enum class FriendStatus { NONE, REQUEST_SENT, REQUEST_RECEIVED, FRIEND }
 
-//contenu de la page contacts
+/**
+ * Contenu principal de l'onglet "Contacts".
+ * Affiche la liste des amis confirmés et donne accès au bouton d'ajout de nouveau contact.
+ */
 @Composable
 fun ContactsPageContent(
     isDarkTheme: Boolean = false,
@@ -353,7 +356,7 @@ fun NewContactDialog(
     }
 }
 
-// Élément d'utilisateur dans la liste de recherche
+/** Élément individuel d'un utilisateur dans le dialogue de recherche de nouveaux contacts */
 @Composable
 fun UserSearchItem(
     user: AppUser,

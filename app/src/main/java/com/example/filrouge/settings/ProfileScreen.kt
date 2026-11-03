@@ -28,7 +28,10 @@ import com.example.filrouge.alarms.DarkBlue
 import com.example.filrouge.alarms.SnoozeManager
 import com.example.filrouge.ui.theme.FilRougeTheme
 
-// Page profil de l'utilisateur
+/**
+ * Écran de consultation de profil (compte personnel ou ami).
+ * Permet d'afficher les informations, le fuseau horaire et le bouton de déconnexion.
+ */
 @Composable
 fun ProfileScreen(
     userId: String? = null,
@@ -59,6 +62,7 @@ fun ProfileScreen(
     )
 }
 
+/** Composant UI affichant le contenu détaillé du profil */
 @Composable
 fun ProfileContent(
     uiState: ProfileUiState,
@@ -98,7 +102,7 @@ fun ProfileContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            //icône de profil
+            // Avatar avec initiale du pseudo
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -124,7 +128,7 @@ fun ProfileContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            //nom du user
+            // Nom et adresse e-mail
             Text(
                 text = uiState.displayName.ifBlank { "Utilisateur" },
                 fontSize = 24.sp,
@@ -229,7 +233,7 @@ fun ProfileContent(
     }
 }
 
-// Ligne d'information du profil (label + valeur)
+/** Ligne d'affichage clé / valeur dans la carte d'informations */
 @Composable
 fun ProfileInfoRow(label: String, value: String, textColor: Color = Color.Black) {
     Row(

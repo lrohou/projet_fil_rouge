@@ -27,7 +27,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.example.filrouge.ui.theme.FilRougeTheme
 
-
+/**
+ * Activité plein écran qui s'affiche au-dessus du lockscreen lorsque l'alarme sonne.
+ * Configure la fenêtre pour déverrouiller l'écran et propose les boutons d'arrêt et de snooze.
+ */
 class AlarmRingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +42,7 @@ class AlarmRingActivity : ComponentActivity() {
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         insetsController.hide(WindowInsetsCompat.Type.systemBars())
 
+        // Autorisation d'affichage par-dessus l'écran de verrouillage et allumage de l'écran
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
@@ -72,6 +76,7 @@ class AlarmRingActivity : ComponentActivity() {
                     alarmName = alarmName,
                     snoozeCount = snoozeCount,
                     onDismiss = {
+                        // Arrêt complet du réveil
                         AlarmReceiver.stopAlarm()
                         val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                         nm.cancel(AlarmReceiver.NOTIFICATION_ID)
@@ -80,6 +85,7 @@ class AlarmRingActivity : ComponentActivity() {
                         finish()
                     },
                     onSnooze = {
+                        // Action de report d'alarme
                         AlarmReceiver.stopAlarm()
                         val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                         nm.cancel(AlarmReceiver.NOTIFICATION_ID)
@@ -91,6 +97,7 @@ class AlarmRingActivity : ComponentActivity() {
                         val userName = SnoozeManager.getUserName(this)
                         SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount, alarmWebhookUrl)
 
+                        // Programmation du snooze
                         AlarmViewModel.scheduleSnooze(
                             context = this,
                             alarmId = alarmId,
@@ -115,6 +122,10 @@ class AlarmRingActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Interface Compose affichée lorsque le réveil sonne.
+ * Affiche le nom de l'alarme, le compteur de snooze/retard et les boutons Éteindre / Snooze.
+ */
 @Composable
 fun AlarmRingScreen(
     alarmName: String,

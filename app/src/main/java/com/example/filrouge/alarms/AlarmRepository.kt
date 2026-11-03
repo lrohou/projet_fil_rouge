@@ -9,6 +9,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
+/**
+ * Repository gérant les opérations de persistance dans Firebase Firestore
+ * pour les alarmes et leurs invitations d'association.
+ */
 class AlarmRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -16,6 +20,7 @@ class AlarmRepository(
     private val alarms get() = db.collection("alarms")
     private val invitations get() = db.collection("alarm_invitations")
 
+    /** Flux écoutant en temps réel les alarmes dans lesquelles l'utilisateur courant est participant */
     fun alarmsFlow(): Flow<List<Alarm>> = callbackFlow {
         val uid = auth.currentUser?.uid
         if (uid == null) {
@@ -41,6 +46,7 @@ class AlarmRepository(
         awaitClose { registration.remove() }
     }
 
+    /** Flux écoutant les invitations en attente pour l'utilisateur courant */
     fun alarmInvitationsFlow(): Flow<List<AlarmInvitation>> = callbackFlow {
         val uid = auth.currentUser?.uid
         if (uid == null) {
@@ -64,6 +70,9 @@ class AlarmRepository(
         awaitClose { registration.remove() }
     }
 
+    /**
+     * Crée un document alarme dans Firestore et envoie des invitations aux contacts invités.
+     */
     suspend fun createAlarm(
         hour: Int,
         minute: Int,
@@ -113,13 +122,14 @@ class AlarmRepository(
                     receiverId = contactUid
                 )
             } catch (e: Exception) {
-                Log.e("AlarmRepository", "Erreur d'invitation (vérifier règles Firestore): ${e.message}", e)
+                Log.e("AlarmRepository", "Erreur d'invitation: ${e.message}", e)
             }
         }
 
         docRef.id
     }
 
+    /** Met à jour les paramètres d'une alarme et génère des invitations pour les nouveaux contacts sélectionnés */
     suspend fun updateAlarm(
         alarmId: String,
         hour: Int,
@@ -171,6 +181,7 @@ class AlarmRepository(
         Unit
     }
 
+    /** Enregistre un document d'invitation dans la collection alarm_invitations */
     private suspend fun sendAlarmInvitation(
         alarmId: String,
         alarmName: String,
@@ -198,6 +209,7 @@ class AlarmRepository(
         Log.d("AlarmRepository", "Invitation enregistrée dans Firestore: id=$invitationId")
     }
 
+    /** Accepte une invitation et ajoute l'utilisateur courant dans les participants de l'alarme */
     suspend fun acceptAlarmInvitation(invitation: AlarmInvitation): Result<Unit> = runCatching {
         val uid = auth.currentUser?.uid ?: error("Utilisateur non connecté")
         alarms.document(invitation.alarmId).update(
@@ -207,16 +219,19 @@ class AlarmRepository(
         Unit
     }
 
+    /** Marque une invitation d'alarme comme refusée */
     suspend fun declineAlarmInvitation(invitationId: String): Result<Unit> = runCatching {
         invitations.document(invitationId).update("status", "declined").await()
         Unit
     }
 
+    /** Active ou désactive le statut de l'alarme */
     suspend fun setEnabled(alarmId: String, enabled: Boolean): Result<Unit> = runCatching {
         alarms.document(alarmId).update("enabled", enabled).await()
         Unit
     }
 
+    /** Supprime définitivement l'alarme de Firestore */
     suspend fun deleteAlarm(alarmId: String): Result<Unit> = runCatching {
         alarms.document(alarmId).delete().await()
         Unit

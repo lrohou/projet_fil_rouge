@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
+/**
+ * Modèle de données pour une relation d'amitié entre deux utilisateurs dans Firestore.
+ */
 @IgnoreExtraProperties
 data class Friendship(
     @DocumentId val id: String = "",
@@ -17,17 +20,23 @@ data class Friendship(
     val requesterId: String = "",
     val status: String = "pending"
 ) {
+    /** Retourne l'UID du second utilisateur de la paire */
     fun otherUid(me: String): String = userIds.first { it != me }
 }
 
+/**
+ * Repository gérant la création, l'acceptation et la suppression des paires d'amitié dans Firestore.
+ */
 class FriendRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     private val col get() = db.collection("friendships")
 
+    /** Clé unique déterministe pour une paire de deux identifiants d'utilisateurs */
     private fun pairId(a: String, b: String) = listOf(a, b).sorted().joinToString("_")
 
+    /** Flux écoutant les relations d'amitié de l'utilisateur connecté */
     fun friendshipsFlow(): Flow<List<Friendship>> = callbackFlow {
         val uid = auth.currentUser?.uid
         if (uid == null) {
@@ -47,6 +56,7 @@ class FriendRepository(
         awaitClose { registration.remove() }
     }
 
+    /** Envoie une demande d'amitié */
     suspend fun sendRequest(otherUid: String): Result<Unit> = runCatching {
         val me = auth.currentUser?.uid ?: error("Utilisateur non connecté")
         require(me != otherUid) { "Impossible de s'ajouter soi-même" }
@@ -61,11 +71,13 @@ class FriendRepository(
         Unit
     }
 
+    /** Accepte une demande d'amitié */
     suspend fun accept(friendshipId: String): Result<Unit> = runCatching {
         col.document(friendshipId).update("status", "accepted").await()
         Unit
     }
 
+    /** Supprime une relation ou refuse une demande */
     suspend fun remove(friendshipId: String): Result<Unit> = runCatching {
         col.document(friendshipId).delete().await()
         Unit

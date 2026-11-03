@@ -6,14 +6,19 @@ import androidx.lifecycle.viewModelScope
 import com.example.filrouge.alarms.AlarmRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import java.util.TimeZone
-import com.google.firebase.firestore.ListenerRegistration
 
+/**
+ * ViewModel gérant le chargement des informations du profil utilisateur
+ * (pseudo, email, fuseau horaire système et décompte des alarmes actives).
+ * Prend en charge l'affichage du compte propre ou de celui d'un tiers.
+ */
 class ProfileViewModel(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
@@ -34,6 +39,7 @@ class ProfileViewModel(
         profileListener?.remove()
     }
 
+    /** Charge le profil cible (ou celui de l'utilisateur connecté si targetUserId est null) */
     fun loadProfile(targetUserId: String?) {
         profileListener?.remove()
         val currentUid = auth.currentUser?.uid
@@ -59,6 +65,7 @@ class ProfileViewModel(
         }
     }
 
+    /** Prépare l'état initial à partir de la session Firebase Auth */
     private fun loadInitialState(): ProfileUiState {
         val user = auth.currentUser
         val initialName = user?.displayName?.takeIf { it.isNotBlank() }
@@ -76,6 +83,7 @@ class ProfileViewModel(
         )
     }
 
+    /** Écoute Firestore pour mettre à jour en temps réel les informations personnelles */
     private fun listenToUserProfile(uid: String?) {
         if (uid == null) return
         profileListener = db.collection("users").document(uid)
@@ -109,6 +117,7 @@ class ProfileViewModel(
             }
     }
 
+    /** Écoute le profil d'un tiers dans Firestore */
     private fun listenToOtherUserProfile(targetUid: String) {
         profileListener = db.collection("users").document(targetUid)
             .addSnapshotListener { snapshot, error ->
@@ -135,6 +144,7 @@ class ProfileViewModel(
             }
     }
 
+    /** Calcule le nombre d'alarmes actuellement activées pour l'utilisateur */
     private fun listenToCurrentAlarms() {
         viewModelScope.launch {
             alarmRepo.alarmsFlow()
@@ -148,6 +158,7 @@ class ProfileViewModel(
         }
     }
 
+    /** Récupère le nombre d'alarmes actives d'un autre utilisateur */
     private fun fetchOtherUserAlarms(targetUid: String) {
         db.collection("alarms")
             .whereArrayContains("participantIds", targetUid)
@@ -157,11 +168,11 @@ class ProfileViewModel(
                 _uiState.value = _uiState.value.copy(activeAlarmsCount = count)
             }
             .addOnFailureListener {
-                // En cas d'erreur de permissions éventuelle, laisser 0
             }
     }
 
     companion object {
+        /** Formate l'affichage du fuseau horaire du système (ex: UTC+1 (Paris)) */
         fun getSystemTimeZoneDisplay(): String {
             val tz = TimeZone.getDefault()
             val now = System.currentTimeMillis()

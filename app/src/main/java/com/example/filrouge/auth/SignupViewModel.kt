@@ -8,6 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel gérant la création de compte.
+ * Valide la saisie des informations (pseudo, email, mot de passe) et communique avec le repository.
+ */
 class SignUpViewModel(
     private val repo: AuthRepository = AuthRepository()
 ) : ViewModel() {
@@ -27,6 +31,7 @@ class SignUpViewModel(
     fun onEmailChange(value: String) { email = value; errorMessage = null }
     fun onPasswordChange(value: String) { password = value; errorMessage = null }
 
+    /** Valide le formulaire et exécute la création de compte */
     fun signUp(onSuccess: () -> Unit) {
         if (displayName.isBlank()) { errorMessage = "Pseudo requis"; return }
         if (!Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()) {

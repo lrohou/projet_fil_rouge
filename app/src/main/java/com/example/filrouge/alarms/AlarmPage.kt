@@ -696,6 +696,7 @@ fun SoundPickerDialog(
         }
     )
 }
+/** Dialogue de sélection des contacts à inviter pour partager cette alarme */
 @Composable
 fun ContactsPickerDialog(
     isDarkTheme: Boolean,

@@ -1,5 +1,8 @@
 package com.example.filrouge.contacts
 
+/**
+ * État de l'interface utilisateur pour la gestion des contacts et demandes d'amitié.
+ */
 data class ContactsUiState(
     val users: List<AppUser> = emptyList(),
     val filteredUsers: List<AppUser> = emptyList(),

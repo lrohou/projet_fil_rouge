@@ -11,6 +11,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+/**
+ * Receiver appelé automatiquement au démarrage du téléphone.
+ * Utilise [goAsync] pour exécuter une requête asynchrone Firestore et reprogrammer les alarmes actives.
+ */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
@@ -20,6 +24,7 @@ class BootReceiver : BroadcastReceiver() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
 
+        // goAsync() permet au Receiver de continuer à s'exécuter de façon asynchrone sans être stoppé par le système
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -39,6 +44,7 @@ class BootReceiver : BroadcastReceiver() {
             } catch (e: Exception) {
                 Log.e("BootReceiver", "Erreur reprogrammation", e)
             } finally {
+                // Libération du Receiver une fois le traitement terminé
                 pendingResult.finish()
             }
         }

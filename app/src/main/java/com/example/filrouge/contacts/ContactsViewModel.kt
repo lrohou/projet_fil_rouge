@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel gérant la liste des utilisateurs, les recherches dynamiques et le statut des relations d'amitié.
+ */
 class ContactsViewModel(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
@@ -42,10 +45,12 @@ class ContactsViewModel(
         usersListener?.remove()
     }
 
+    /** Recharge la liste des utilisateurs */
     fun fetchUsers() {
         listenToUsers()
     }
 
+    /** Écoute en temps réel la collection des utilisateurs Firestore (hors utilisateur connecté) */
     fun listenToUsers() {
         val currentUid = auth.currentUser?.uid
         Log.d("ContactsVM", "listenToUsers() called. currentUid: $currentUid")
@@ -105,6 +110,7 @@ class ContactsViewModel(
             }
     }
 
+    /** Met à jour les sous-ensembles des demandes envoyées, reçues et amis confirmés */
     private fun updateFriendState() {
         val me = auth.currentUser?.uid ?: return
         _uiState.update { state ->
@@ -127,6 +133,7 @@ class ContactsViewModel(
         }
     }
 
+    /** Met à jour le filtre de recherche de contacts */
     fun onSearchQueryChange(query: String) {
         val filtered = applyFilter(_uiState.value.users, query)
         _uiState.value = _uiState.value.copy(
@@ -135,6 +142,7 @@ class ContactsViewModel(
         )
     }
 
+    /** Envoie une demande d'ami à un utilisateur */
     fun sendFriendRequest(userId: String, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             val result = friendRepo.sendRequest(userId)
@@ -143,14 +151,17 @@ class ContactsViewModel(
         }
     }
 
+    /** Accepte une demande d'ami entrante */
     fun acceptRequest(friendshipId: String) {
         viewModelScope.launch { friendRepo.accept(friendshipId) }
     }
 
+    /** Refuse ou supprime une relation d'amitié */
     fun refuseRequest(friendshipId: String) {
         viewModelScope.launch { friendRepo.remove(friendshipId) }
     }
 
+    /** Applique le filtre textuel sur le nom ou l'e-mail */
     private fun applyFilter(users: List<AppUser>, query: String): List<AppUser> {
         val q = query.trim().lowercase()
         if (q.isEmpty()) return users

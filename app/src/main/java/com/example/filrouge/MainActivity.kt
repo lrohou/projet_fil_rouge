@@ -69,6 +69,11 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "parametres")
 val DarkThemeKey = booleanPreferencesKey("is_dark_theme")
 
+/**
+ * Activité principale de l'application.
+ * Configure le rendu Edge-to-Edge, écoute la préférence du thème sombre via DataStore,
+ * et lance le composable de navigation globale.
+ */
 class MainActivity : ComponentActivity() {
     @SuppressLint("FlowOperatorInvokedInComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,6 +92,7 @@ class MainActivity : ComponentActivity() {
                 AppNavigation(
                     isDarkTheme = isDarkTheme,
                     onToggleDarkTheme = { newValue ->
+                        // Sauvegarde asynchrone du choix de thème
                         scope.launch {
                             context.dataStore.edit { preferences ->
                                 preferences[DarkThemeKey] = newValue
@@ -99,6 +105,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Formulaire de connexion affichant les champs e-mail/mot de passe,
+ * le bouton de connexion Google ainsi que les liens de réinitialisation et d'inscription.
+ */
 @Composable
 fun LoginForm(
     username: String,
@@ -206,6 +216,10 @@ fun LoginForm(
     }
 }
 
+/**
+ * Écran principal de connexion gérant la logique d'authentification e-mail
+ * et l'intégration de Credential Manager pour l'authentification avec Google.
+ */
 @Composable
 fun LoginScreen(
     onNavigateToHome: () -> Unit,
@@ -216,6 +230,7 @@ fun LoginScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // Déclenchement du flux d'authentification Google via CredentialManager
     val onGoogleClick: () -> Unit = {
         scope.launch {
             try {
