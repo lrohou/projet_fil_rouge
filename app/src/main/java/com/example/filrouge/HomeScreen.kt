@@ -36,6 +36,11 @@ import com.example.filrouge.contacts.Contact
 import com.example.filrouge.contacts.ContactsPageContent
 import kotlinx.coroutines.launch
 import com.example.filrouge.contacts.ContactsViewModel
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import com.example.filrouge.ui.UserAvatar
+import com.example.filrouge.settings.ProfileViewModel
 import com.example.filrouge.settings.SettingsPageContent
 
 /**
@@ -64,6 +69,8 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val contactsViewModel: ContactsViewModel = viewModel()
     val contactsState by contactsViewModel.uiState.collectAsState()
+    val profileViewModel: ProfileViewModel = viewModel()
+    val profileState by profileViewModel.uiState.collectAsState()
 
     // État pour afficher/masquer les notifications
     var showNotifications by remember { mutableStateOf(false) }
@@ -81,7 +88,7 @@ fun HomeScreen(
 
     val realContacts = contactsState.users
         .filter { it.uid in contactsState.friendIds }
-        .map { Contact(uid = it.uid, name = it.displayName, subtitle = it.email) }
+        .map { Contact(uid = it.uid, name = it.displayName, subtitle = it.email, photoUrl = it.photoUrl) }
 
     // Dialog de création d'une nouvelle alarme
     if (showNewAlarmDialog) {
@@ -197,12 +204,14 @@ fun HomeScreen(
                         onClick = onNavigateToProfile,
                         modifier = Modifier
                             .size(48.dp)
-                            .background(DarkBlue, CircleShape)
+                            .clip(CircleShape)
+                            .background(DarkBlue)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_person),
-                            contentDescription = stringResource(R.string.cd_profile),
-                            modifier = Modifier.size(28.dp)
+                        UserAvatar(
+                            photoUrl = profileState.photoUrl,
+                            displayName = profileState.displayName,
+                            initialFontSize = 20.sp,
+                            iconSize = 28.dp
                         )
                     }
 

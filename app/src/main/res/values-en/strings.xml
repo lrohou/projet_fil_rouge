@@ -151,6 +151,15 @@
 
     <!-- Profile Screen -->
     <string name="cd_profile_photo">Profile photo</string>
+    <string name="profile_change_photo">Change</string>
+    <string name="profile_add_photo">Add photo</string>
+    <string name="profile_delete_photo">Delete</string>
+    <string name="profile_photo_options">Profile photo</string>
+    <string name="profile_delete_confirm_title">Delete photo</string>
+    <string name="profile_delete_confirm_msg">Are you sure you want to delete your profile photo?</string>
+    <string name="profile_photo_upload_error">Error uploading profile photo</string>
+    <string name="profile_photo_delete_error">Error deleting profile photo</string>
+    <string name="profile_photo_uploading">Updating photo...</string>
     <string name="profile_info_title">Information</string>
     <string name="profile_label_name">Name</string>
     <string name="profile_label_email">Email</string>

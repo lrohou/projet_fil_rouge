@@ -27,11 +27,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.filrouge.R
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import com.example.filrouge.ui.UserAvatar
 import com.example.filrouge.alarms.CardBlue
 import com.example.filrouge.alarms.DarkBlue
 
 //modèle de données pour un contact
-data class Contact(val uid: String, val name: String, val subtitle: String)
+data class Contact(val uid: String, val name: String, val subtitle: String, val photoUrl: String = "")
 
 enum class FriendStatus { NONE, REQUEST_SENT, REQUEST_RECEIVED, FRIEND }
 
@@ -52,7 +56,7 @@ fun ContactsPageContent(
 
     val contacts = uiState.users
         .filter { it.uid in uiState.friendIds }
-        .map { Contact(uid = it.uid, name = it.displayName, subtitle = it.email) }
+        .map { Contact(uid = it.uid, name = it.displayName, subtitle = it.email, photoUrl = it.photoUrl) }
 
     val textColor = if (isDarkTheme) Color.White else Color.Black
     val cardColor = if (isDarkTheme) Color(0xFF1E2A38) else CardBlue
@@ -385,25 +389,17 @@ fun UserSearchItem(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .background(DarkBlue, CircleShape)
+                    .clip(CircleShape)
+                    .background(DarkBlue)
                     .clickable(onClick = onUserClick),
                 contentAlignment = Alignment.Center
             ) {
-                val initial = user.displayName.trim().take(1).uppercase()
-                if (initial.isNotEmpty()) {
-                    Text(
-                        text = initial,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_person),
-                        contentDescription = stringResource(R.string.cd_avatar),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                UserAvatar(
+                    photoUrl = user.photoUrl,
+                    displayName = user.displayName,
+                    initialFontSize = 18.sp,
+                    iconSize = 24.dp
+                )
             }
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -501,13 +497,15 @@ fun ContactCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(avatarBg, CircleShape),
+                    .clip(CircleShape)
+                    .background(avatarBg),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = avatarIcon),
-                    contentDescription = stringResource(R.string.cd_avatar),
-                    modifier = Modifier.size(28.dp)
+                UserAvatar(
+                    photoUrl = contact.photoUrl,
+                    displayName = contact.name,
+                    initialFontSize = 20.sp,
+                    iconSize = 28.dp
                 )
             }
 

@@ -1,25 +1,35 @@
 package com.example.filrouge.settings
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.filrouge.R
 import com.example.filrouge.alarms.AlarmRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.util.TimeZone
 
 /**
  * ViewModel gérant le chargement des informations du profil utilisateur
- * (pseudo, email, fuseau horaire système et décompte des alarmes actives).
- * Prend en charge l'affichage du compte propre ou de celui d'un tiers.
+ * (pseudo, email, fuseau horaire système, photo de profil et décompte des alarmes actives).
+ * Prend en charge l'affichage du compte propre ou de celui d'un tiers,
+ * ainsi que l'import, la modification et la suppression de la photo de profil (stockée directement dans Firestore en Base64).
  */
 class ProfileViewModel @JvmOverloads constructor(
     application: Application,
@@ -60,6 +70,7 @@ class ProfileViewModel @JvmOverloads constructor(
                 email = "",
                 timeZone = getApplication<Application>().getString(R.string.not_specified),
                 activeAlarmsCount = 0,
+                photoUrl = "",
                 isCurrentUser = false,
                 isLoading = true
             )
@@ -75,12 +86,14 @@ class ProfileViewModel @JvmOverloads constructor(
             ?: user?.email?.substringBefore("@")
             ?: ""
         val initialEmail = user?.email ?: ""
+        val initialPhoto = user?.photoUrl?.toString() ?: ""
         return ProfileUiState(
             userId = user?.uid ?: "",
             displayName = initialName,
             email = initialEmail,
             timeZone = getSystemTimeZoneDisplay(),
             activeAlarmsCount = 0,
+            photoUrl = initialPhoto,
             isCurrentUser = true,
             isLoading = false
         )
@@ -99,6 +112,7 @@ class ProfileViewModel @JvmOverloads constructor(
                 if (snapshot != null && snapshot.exists()) {
                     val firestoreName = snapshot.getString("displayName")
                     val firestoreEmail = snapshot.getString("email")
+                    val firestorePhoto = snapshot.getString("photoUrl")
 
                     val current = _uiState.value
                     val finalName = firestoreName?.takeIf { it.isNotBlank() }
@@ -110,10 +124,14 @@ class ProfileViewModel @JvmOverloads constructor(
                         ?: current.email.takeIf { it.isNotBlank() }
                         ?: auth.currentUser?.email
                         ?: ""
+                    val finalPhoto = firestorePhoto?.takeIf { it.isNotBlank() }
+                        ?: auth.currentUser?.photoUrl?.toString()
+                        ?: ""
 
                     _uiState.value = current.copy(
                         displayName = finalName,
                         email = finalEmail,
+                        photoUrl = finalPhoto,
                         isLoading = false
                     )
                 }
@@ -135,11 +153,13 @@ class ProfileViewModel @JvmOverloads constructor(
                         ?: app.getString(R.string.default_user_name)
                     val email = snapshot.getString("email") ?: ""
                     val tz = snapshot.getString("timeZone")?.takeIf { it.isNotBlank() } ?: app.getString(R.string.not_specified)
+                    val photo = snapshot.getString("photoUrl") ?: ""
 
                     _uiState.value = _uiState.value.copy(
                         displayName = name,
                         email = email,
                         timeZone = tz,
+                        photoUrl = photo,
                         isLoading = false
                     )
                 } else {
@@ -173,6 +193,97 @@ class ProfileViewModel @JvmOverloads constructor(
             }
             .addOnFailureListener {
             }
+    }
+
+    /**
+     * Importe ou modifie la photo de profil :
+     * compresse l'image en JPEG léger (256x256, 75%) et l'encode en Base64,
+     * puis met à jour directement le champ `photoUrl` dans Firestore (100% gratuit, aucun forfait requis).
+     */
+    fun uploadProfilePicture(uri: Uri) {
+        val uid = auth.currentUser?.uid ?: return
+        _uiState.value = _uiState.value.copy(isUploadingPhoto = true, errorMessage = null)
+
+        viewModelScope.launch {
+            try {
+                val base64String = withContext(Dispatchers.IO) {
+                    val inputStream = getApplication<Application>().contentResolver.openInputStream(uri)
+                        ?: throw IllegalStateException("Impossible de lire l'image sélectionnée")
+                    val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                    inputStream.close()
+                    if (originalBitmap == null) throw IllegalStateException("Format d'image invalide")
+
+                    //redimmensionnement pour alléger l'image dans firebase
+                    val maxDim = 256
+                    val width = originalBitmap.width
+                    val height = originalBitmap.height
+                    val ratio = minOf(maxDim.toFloat() / width, maxDim.toFloat() / height, 1.0f)
+
+                    val scaledBitmap = if (ratio < 1.0f) {
+                        Bitmap.createScaledBitmap(
+                            originalBitmap,
+                            (width * ratio).toInt(),
+                            (height * ratio).toInt(),
+                            true
+                        )
+                    } else {
+                        originalBitmap
+                    }
+
+                    val outputStream = ByteArrayOutputStream()
+                    scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 75, outputStream)
+                    val bytes = outputStream.toByteArray()
+                    Base64.encodeToString(bytes, Base64.NO_WRAP)
+                }
+
+                // mise a jour dans firestore
+                db.collection("users").document(uid).update("photoUrl", base64String).await()
+
+                _uiState.value = _uiState.value.copy(
+                    photoUrl = base64String,
+                    isUploadingPhoto = false
+                )
+            } catch (e: Exception) {
+                Log.e("ProfileVM", "Erreur enregistrement photo: ${e.message}", e)
+                val app = getApplication<Application>()
+                _uiState.value = _uiState.value.copy(
+                    isUploadingPhoto = false,
+                    errorMessage = e.localizedMessage ?: app.getString(R.string.profile_photo_upload_error)
+                )
+            }
+        }
+    }
+
+    /**
+     * Supprime la photo de profil :
+     * retire le champ `photoUrl` dans le document Firestore.
+     */
+    fun deleteProfilePicture() {
+        val uid = auth.currentUser?.uid ?: return
+        _uiState.value = _uiState.value.copy(isUploadingPhoto = true, errorMessage = null)
+
+        viewModelScope.launch {
+            try {
+                // Suppression du champ photoUrl dans Firestore
+                db.collection("users").document(uid).update("photoUrl", FieldValue.delete()).await()
+
+                _uiState.value = _uiState.value.copy(
+                    photoUrl = "",
+                    isUploadingPhoto = false
+                )
+            } catch (e: Exception) {
+                Log.e("ProfileVM", "Erreur suppression photo: ${e.message}", e)
+                val app = getApplication<Application>()
+                _uiState.value = _uiState.value.copy(
+                    isUploadingPhoto = false,
+                    errorMessage = e.localizedMessage ?: app.getString(R.string.profile_photo_delete_error)
+                )
+            }
+        }
+    }
+
+    fun clearErrorMessage() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
     companion object {

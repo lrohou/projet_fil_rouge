@@ -9,6 +9,9 @@ data class ProfileUiState(
     val email: String = "",
     val timeZone: String = "",
     val activeAlarmsCount: Int = 0,
+    val photoUrl: String = "",
     val isCurrentUser: Boolean = true,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isUploadingPhoto: Boolean = false,
+    val errorMessage: String? = null
 )

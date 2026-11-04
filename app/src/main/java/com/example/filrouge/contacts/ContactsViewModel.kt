@@ -89,7 +89,8 @@ class ContactsViewModel @JvmOverloads constructor(
                         AppUser(
                             uid = doc.id,
                             displayName = displayName,
-                            email = doc.getString("email") ?: ""
+                            email = doc.getString("email") ?: "",
+                            photoUrl = doc.getString("photoUrl") ?: ""
                         )
                     }
                         .filter { it.uid != currentUid }   // tous les users sauf le user connecté

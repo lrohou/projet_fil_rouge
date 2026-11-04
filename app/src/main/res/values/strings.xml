@@ -151,6 +151,15 @@
 
     <!-- Profile Screen -->
     <string name="cd_profile_photo">Photo de profil</string>
+    <string name="profile_change_photo">Modifier</string>
+    <string name="profile_add_photo">Ajouter une photo</string>
+    <string name="profile_delete_photo">Supprimer</string>
+    <string name="profile_photo_options">Photo de profil</string>
+    <string name="profile_delete_confirm_title">Supprimer la photo</string>
+    <string name="profile_delete_confirm_msg">Voulez-vous vraiment supprimer votre photo de profil ?</string>
+    <string name="profile_photo_upload_error">Erreur lors de l\'envoi de la photo</string>
+    <string name="profile_photo_delete_error">Erreur lors de la suppression de la photo</string>
+    <string name="profile_photo_uploading">Mise à jour en cours...</string>
     <string name="profile_info_title">Informations</string>
     <string name="profile_label_name">Nom</string>
     <string name="profile_label_email">Email</string>

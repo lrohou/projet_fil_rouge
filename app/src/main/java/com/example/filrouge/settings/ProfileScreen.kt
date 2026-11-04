@@ -1,20 +1,25 @@
 package com.example.filrouge.settings
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -23,6 +28,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.filrouge.ui.UserAvatar
+import coil.request.ImageRequest
 import com.example.filrouge.R
 import com.example.filrouge.alarms.CardBlue
 import com.example.filrouge.alarms.DarkBlue
@@ -31,7 +38,8 @@ import com.example.filrouge.ui.theme.FilRougeTheme
 
 /**
  * Écran de consultation de profil (compte personnel ou ami).
- * Permet d'afficher les informations, le fuseau horaire et le bouton de déconnexion.
+ * Permet d'afficher les informations, le fuseau horaire, d'importer/modifier/supprimer
+ * sa photo de profil et de se déconnecter.
  */
 @Composable
 fun ProfileScreen(
@@ -46,12 +54,20 @@ fun ProfileScreen(
     }
 
     val uiState by viewModel.uiState.collectAsState()
-
-    // Sauvegarder le nom dès qu'il est chargé depuis Firestore (pour AlarmReceiver / AlarmRingActivity)
     val context = LocalContext.current
+
+    //sauvegarder le nom dès qu'il est chargé depuis firestore
     LaunchedEffect(uiState.displayName) {
         if (uiState.displayName.isNotBlank()) {
             SnoozeManager.saveUserName(context, uiState.displayName)
+        }
+    }
+
+    //affichage des erreurs éventuelles 
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+            viewModel.clearErrorMessage()
         }
     }
 
@@ -59,7 +75,9 @@ fun ProfileScreen(
         uiState = uiState,
         isDarkTheme = isDarkTheme,
         onBack = onBack,
-        onLogout = onLogout
+        onLogout = onLogout,
+        onUploadPhoto = viewModel::uploadProfilePicture,
+        onDeletePhoto = viewModel::deleteProfilePicture
     )
 }
 
@@ -69,12 +87,60 @@ fun ProfileContent(
     uiState: ProfileUiState,
     isDarkTheme: Boolean = false,
     onBack: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onUploadPhoto: (Uri) -> Unit = {},
+    onDeletePhoto: () -> Unit = {}
 ) {
     val bgColor = if (isDarkTheme) Color(0xFF121212) else Color.White
     val textColor = if (isDarkTheme) Color.White else Color.Black
     val cardColor = if (isDarkTheme) Color(0xFF1E2A38) else CardBlue
     val subTextColor = if (isDarkTheme) Color.LightGray else Color.Gray
+
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+
+    //sélectionneur d'image Android
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            onUploadPhoto(uri)
+        }
+    }
+
+    //Dialog de confirmation pour la suppression de la photo
+    if (showDeleteConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.profile_delete_confirm_title),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(text = stringResource(R.string.profile_delete_confirm_msg))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmDialog = false
+                        onDeletePhoto()
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.profile_delete_photo),
+                        color = Color(0xFFD32F2F),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text(text = stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
 
     Scaffold(containerColor = bgColor) { innerPadding ->
         Column(
@@ -101,29 +167,113 @@ fun ProfileContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Avatar avec initiale du pseudo
+            // Avatar avec photo / initiale du pseudo
             Box(
                 modifier = Modifier
-                    .size(100.dp)
-                    .background(DarkBlue, CircleShape),
+                    .size(110.dp)
+                    .clip(CircleShape)
+                    .background(DarkBlue)
+                    .then(
+                        if (uiState.isCurrentUser && !uiState.isUploadingPhoto) {
+                            Modifier.clickable {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            }
+                        } else Modifier
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                val initial = uiState.displayName.trim().take(1).uppercase()
-                if (initial.isNotEmpty()) {
-                    Text(
-                        text = initial,
-                        fontSize = 44.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                UserAvatar(
+                    photoUrl = uiState.photoUrl,
+                    displayName = uiState.displayName,
+                    initialFontSize = 46.sp,
+                    iconSize = 56.dp
+                )
+
+                // Overlay de chargement pendant l'envoi ou la suppression
+                if (uiState.isUploadingPhoto) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(36.dp),
+                            strokeWidth = 3.dp
+                        )
+                    }
+                }
+            }
+
+            // Boutons d'action pour la photo (uniquement pour l'utilisateur connecté)
+            if (uiState.isCurrentUser) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (uiState.photoUrl.isBlank()) {
+                    Button(
+                        onClick = {
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        enabled = !uiState.isUploadingPhoto,
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.profile_add_photo),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
                 } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_person),
-                        contentDescription = stringResource(R.string.cd_profile_photo),
-                        modifier = Modifier.size(56.dp)
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                            enabled = !uiState.isUploadingPhoto,
+                            colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.profile_change_photo),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = { showDeleteConfirmDialog = true },
+                            enabled = !uiState.isUploadingPhoto,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFFD32F2F)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.profile_delete_photo),
+                                color = Color(0xFFD32F2F),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
                 }
             }
 
@@ -137,7 +287,7 @@ fun ProfileContent(
                 color = textColor
             )
 
-            //email du user
+            // Email du user
             if (uiState.email.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
