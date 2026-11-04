@@ -1,0 +1,161 @@
+<resources>
+    <string name="app_name">Fil Rouge</string>
+
+    <!-- General / Common -->
+    <string name="default_user_name">User</string>
+    <string name="default_alarm_name">Alarm</string>
+    <string name="default_friend_name">A friend</string>
+    <string name="not_specified">Not specified</string>
+    <string name="btn_close">Close</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_create">Create</string>
+    <string name="btn_finish">Done</string>
+    <string name="btn_back">← Back</string>
+    <string name="btn_retry">Retry</string>
+    <string name="btn_accept">Accept</string>
+    <string name="btn_refuse">Decline</string>
+
+    <!-- Auth / Login -->
+    <string name="login_app_title">My Social Alarm</string>
+    <string name="desc_app_logo">App logo</string>
+    <string name="placeholder_email">Enter Email Address</string>
+    <string name="placeholder_password">Enter Password</string>
+    <string name="forgot_password">Forgot your password?</string>
+    <string name="sign_in">Sign In</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="no_account_yet">No account yet? </string>
+    <string name="click_here">Click here </string>
+    <string name="to_sign_up">to sign up.</string>
+
+    <!-- Auth / Sign Up -->
+    <string name="create_account_title">Create an account</string>
+    <string name="placeholder_username">Username</string>
+    <string name="placeholder_signup_email">Email address</string>
+    <string name="placeholder_signup_password">Password</string>
+    <string name="btn_create_account">Create my account</string>
+    <string name="already_have_account">Already have an account? Sign in</string>
+
+    <!-- Auth / Error and Info Messages -->
+    <string name="error_invalid_email">Invalid email address</string>
+    <string name="error_password_too_short">Minimum 6 characters</string>
+    <string name="error_username_required">Username required</string>
+    <string name="error_google_sign_in">Google sign-in failed</string>
+    <string name="error_enter_email_to_reset">Enter your email to reset your password</string>
+    <string name="info_reset_email_sent">Reset email sent</string>
+    <string name="error_auth_weak_password">Password too weak (minimum 6 characters)</string>
+    <string name="error_auth_invalid_credentials">Incorrect email or password</string>
+    <string name="error_auth_user_collision">An account already exists with this email</string>
+    <string name="error_auth_network">No internet connection</string>
+    <string name="error_auth_unknown">An error occurred, please try again</string>
+    <string name="error_user_not_connected">User not signed in</string>
+    <string name="error_firestore_permissions">Firestore permissions error</string>
+
+    <!-- Navigation -->
+    <string name="nav_contacts">Contacts</string>
+    <string name="nav_alarms">Alarms</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Notifications Header & Dropdown -->
+    <string name="cd_profile">Profile</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="no_notifications">No notifications</string>
+    <string name="notif_friend_request">wants to be your friend</string>
+    <string name="notif_alarm_invitation_format">invites you to the alarm \'%1$s\' (%2$s)</string>
+
+    <!-- Alarms Page -->
+    <string name="overlay_perm_title">🔔 Full-screen display</string>
+    <string name="overlay_perm_desc">To allow the alarm to take over the full screen even when you are in another app, please allow display over other apps.</string>
+    <string name="btn_overlay_perm">Allow display</string>
+    <string name="btn_new_alarm">New\nAlarm</string>
+    <string name="cd_add_alarm">Add an alarm</string>
+    <string name="alarms_in_progress">Active alarms</string>
+    <string name="no_alarms_yet">No alarms yet</string>
+    <string name="cd_delete">Delete</string>
+
+    <!-- Alarm Edit / Create Dialog -->
+    <string name="new_alarm_title">New Alarm</string>
+    <string name="edit_alarm_title">Edit alarm</string>
+    <string name="label_alarm_name">Alarm name</string>
+    <string name="label_repeat_days">Repeat days</string>
+    <string name="label_sound">Sound</string>
+    <string name="label_vibrate">Vibrate</string>
+    <string name="label_discord_webhook">Discord Webhook (optional)</string>
+    <string name="placeholder_discord_webhook">https://discord.com/api/webhooks/...</string>
+    <string name="btn_invite_contacts">Invite contacts</string>
+    <string name="btn_invite_contacts_count">Invite contacts (%1$d)</string>
+
+    <!-- Day letters for selector -->
+    <string name="day_mon_short">M</string>
+    <string name="day_tue_short">T</string>
+    <string name="day_wed_short">W</string>
+    <string name="day_thu_short">T</string>
+    <string name="day_fri_short">F</string>
+    <string name="day_sat_short">S</string>
+    <string name="day_sun_short">S</string>
+
+    <!-- Day names for subtitle -->
+    <string name="day_lun">Mon</string>
+    <string name="day_mar">Tue</string>
+    <string name="day_mer">Wed</string>
+    <string name="day_jeu">Thu</string>
+    <string name="day_ven">Fri</string>
+    <string name="day_sam">Sat</string>
+    <string name="day_dim">Sun</string>
+    <string name="today">today</string>
+    <string name="tomorrow">tomorrow</string>
+
+    <!-- Sound Picker -->
+    <string name="sound_picker_title">Choose a sound</string>
+    <string name="cd_stop_sound">Stop</string>
+    <string name="cd_play_sound">Play</string>
+    <string name="sound_goofy_random">🤪 I am completely crazy</string>
+
+    <!-- Contacts Picker Dialog (in Alarm edit) -->
+    <string name="invite_contacts_dialog_title">Invite contacts</string>
+    <string name="no_contacts_available">No contacts available</string>
+
+    <!-- Alarm Ring & Receiver -->
+    <string name="toast_alarm_snoozed">Alarm snoozed by 10 min (Estimated delay: %1$d min)</string>
+    <string name="alarm_time_is_up">Time\'s up!</string>
+    <string name="alarm_delay_estimate">⏰ Estimated delay: %1$d min (Snooze x%2$d)</string>
+    <string name="btn_turn_off">Turn off</string>
+    <string name="btn_snooze_10m">Snooze (+10 min)</string>
+    <string name="notif_alarm_tap_to_dismiss">Tap to dismiss</string>
+    <string name="notif_channel_alarms_name">Alarms</string>
+    <string name="notif_channel_alarms_desc">Alarm notifications</string>
+
+    <!-- Contacts Page -->
+    <string name="contacts_title">Contacts</string>
+    <string name="no_contacts_yet">No contacts yet</string>
+    <string name="btn_new_contact">New\nContact</string>
+    <string name="cd_add_contact">Add a contact</string>
+    <string name="new_contact_title">New contact</string>
+    <string name="placeholder_search_user">Search for a user...</string>
+    <string name="error_load_users">Unable to load users</string>
+    <string name="no_other_users">No other registered users</string>
+    <string name="no_users_found_for_query">No users found for \"%1$s\"</string>
+    <string name="toast_friend_request_sent">Friend request sent to %1$s</string>
+    <string name="toast_friend_request_error">Unable to send the request</string>
+    <string name="cd_avatar">Avatar</string>
+    <string name="btn_friend_request">Friend request</string>
+    <string name="status_friend">Friend 👋"</string>
+    <string name="status_sent">Sent 👋"</string>
+    <string name="cd_add_alarm_for_contact">Add alarm</string>
+
+    <!-- Settings Page -->
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_language">Language</string>
+
+    <!-- Profile Screen -->
+    <string name="cd_profile_photo">Profile photo</string>
+    <string name="profile_info_title">Information</string>
+    <string name="profile_label_name">Name</string>
+    <string name="profile_label_email">Email</string>
+    <string name="profile_label_timezone">Time zone</string>
+    <string name="profile_label_active_alarms">Active alarms</string>
+    <string name="btn_logout">Sign out</string>
+</resources>
+

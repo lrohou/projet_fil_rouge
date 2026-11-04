@@ -68,4 +68,5 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
     implementation("androidx.compose.material:material-icons-core")
+    implementation("androidx.appcompat:appcompat:1.7.0")
 }

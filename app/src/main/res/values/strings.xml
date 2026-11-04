@@ -147,6 +147,7 @@
     <string name="settings_theme">Thème</string>
     <string name="settings_theme_light">Clair</string>
     <string name="settings_theme_dark">Sombre</string>
+    <string name="settings_language">Langue</string>
 
     <!-- Profile Screen -->
     <string name="cd_profile_photo">Photo de profil</string>
