@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.example.filrouge.R
 import com.example.filrouge.ui.theme.FilRougeTheme
 
 /**
@@ -63,7 +65,7 @@ class AlarmRingActivity : ComponentActivity() {
         )
 
         val alarmId = intent.getStringExtra("alarm_id") ?: ""
-        val alarmName = intent.getStringExtra("alarm_name") ?: "Alarme"
+        val alarmName = intent.getStringExtra("alarm_name") ?: getString(R.string.default_alarm_name)
         val soundName = intent.getStringExtra("alarm_sound") ?: "aura_tone"
         val shouldVibrate = intent.getBooleanExtra("alarm_vibrate", false)
         val alarmWebhookUrl = intent.getStringExtra("alarm_webhook_url") ?: ""
@@ -110,7 +112,7 @@ class AlarmRingActivity : ComponentActivity() {
 
                         Toast.makeText(
                             this,
-                            "Alarme reportée de 10 min (Retard estimé : $retardMinutes min)",
+                            getString(R.string.toast_alarm_snoozed, retardMinutes),
                             Toast.LENGTH_SHORT
                         ).show()
 
@@ -166,7 +168,7 @@ fun AlarmRingScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Il est l'heure !",
+                text = stringResource(R.string.alarm_time_is_up),
                 fontSize = 18.sp,
                 color = Color(0xFFB0C4DE)
             )
@@ -180,7 +182,7 @@ fun AlarmRingScreen(
                     border = BorderStroke(1.dp, Color(0x88FFA726))
                 ) {
                     Text(
-                        text = "⏱️ Retard estimé : $estimatedDelay min (Snooze x$snoozeCount)",
+                        text = stringResource(R.string.alarm_delay_estimate, estimatedDelay, snoozeCount),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFFFFCC80),
@@ -203,7 +205,7 @@ fun AlarmRingScreen(
                 )
             ) {
                 Text(
-                    text = "Éteindre",
+                    text = stringResource(R.string.btn_turn_off),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -225,7 +227,7 @@ fun AlarmRingScreen(
                 )
             ) {
                 Text(
-                    text = "Snooze (+10 min)",
+                    text = stringResource(R.string.btn_snooze_10m),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White

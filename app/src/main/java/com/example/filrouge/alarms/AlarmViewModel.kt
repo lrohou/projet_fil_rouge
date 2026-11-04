@@ -19,7 +19,7 @@ import java.util.Calendar
  * ViewModel gérant l'état UI des alarmes et des invitations.
  * Assure la communication avec AlarmRepository et orchestre les appels système à AlarmManager.
  */
-class AlarmViewModel(
+class AlarmViewModel @JvmOverloads constructor(
     private val repo: AlarmRepository = AlarmRepository()
 ) : ViewModel() {
 

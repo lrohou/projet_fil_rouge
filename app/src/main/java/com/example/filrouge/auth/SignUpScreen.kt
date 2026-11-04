@@ -20,12 +20,14 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.filrouge.R
 
 /**
  * Écran de création d'un nouveau compte utilisateur.
@@ -48,14 +50,14 @@ fun SignUpScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Créer un compte", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.create_account_title), fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.size(32.dp))
 
             TextField(
                 value = viewModel.displayName,
                 onValueChange = viewModel::onDisplayNameChange,
                 singleLine = true,
-                placeholder = { Text("Pseudo") }
+                placeholder = { Text(stringResource(R.string.placeholder_username)) }
             )
             Spacer(Modifier.size(8.dp))
 
@@ -64,7 +66,7 @@ fun SignUpScreen(
                 onValueChange = viewModel::onEmailChange,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                placeholder = { Text("Adresse e-mail") }
+                placeholder = { Text(stringResource(R.string.placeholder_signup_email)) }
             )
             Spacer(Modifier.size(8.dp))
 
@@ -74,7 +76,7 @@ fun SignUpScreen(
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                placeholder = { Text("Mot de passe") }
+                placeholder = { Text(stringResource(R.string.placeholder_signup_password)) }
             )
             Spacer(Modifier.size(8.dp))
 
@@ -92,14 +94,14 @@ fun SignUpScreen(
                 if (viewModel.isLoading) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 } else {
-                    Text("Créer mon compte")
+                    Text(stringResource(R.string.btn_create_account))
                 }
             }
 
             Spacer(Modifier.size(16.dp))
 
             TextButton(onClick = onBack) {
-                Text("Déjà un compte ? Se connecter")
+                Text(stringResource(R.string.already_have_account))
             }
         }
     }

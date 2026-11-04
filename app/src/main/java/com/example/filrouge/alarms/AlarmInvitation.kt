@@ -1,5 +1,7 @@
 package com.example.filrouge.alarms
 
+import android.content.Context
+import com.example.filrouge.R
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.IgnoreExtraProperties
 
@@ -25,4 +27,7 @@ data class AlarmInvitation(
     /** Nom d'affichage de l'alarme invitée */
     val displayName: String
         get() = alarmName.ifBlank { "Alarme" }
+
+    fun getDisplayName(context: Context): String =
+        alarmName.ifBlank { context.getString(R.string.default_alarm_name) }
 }

@@ -70,7 +70,7 @@ class AlarmReceiver : BroadcastReceiver() {
             nm.cancel(NOTIFICATION_ID)
 
             val alarmId = intent.getStringExtra("alarm_id") ?: return
-            val alarmName = intent.getStringExtra("alarm_name") ?: "Alarme"
+            val alarmName = intent.getStringExtra("alarm_name") ?: context.getString(R.string.default_alarm_name)
             val soundName = intent.getStringExtra("alarm_sound") ?: "aura_tone"
             val shouldVibrate = intent.getBooleanExtra("alarm_vibrate", false)
             val alarmWebhookUrl = intent.getStringExtra("alarm_webhook_url") ?: ""
@@ -96,7 +96,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         // Traitement normal du déclenchement de l'alarme
         val alarmId = intent.getStringExtra("alarm_id") ?: return
-        val alarmName = intent.getStringExtra("alarm_name") ?: "Alarme"
+        val alarmName = intent.getStringExtra("alarm_name") ?: context.getString(R.string.default_alarm_name)
         val soundName = intent.getStringExtra("alarm_sound") ?: "aura_tone"
         val shouldVibrate = intent.getBooleanExtra("alarm_vibrate", false)
         val alarmWebhookUrl = intent.getStringExtra("alarm_webhook_url") ?: ""
@@ -167,14 +167,14 @@ class AlarmReceiver : BroadcastReceiver() {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_bell)
             .setContentTitle(alarmName)
-            .setContentText("Appuyez pour éteindre")
+            .setContentText(context.getString(R.string.notif_alarm_tap_to_dismiss))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .addAction(R.drawable.ic_close, "Éteindre", stopPendingIntent)
-            .addAction(R.drawable.ic_bell, "Snooze (+10 min)", snoozePendingIntent)
+            .addAction(R.drawable.ic_close, context.getString(R.string.btn_turn_off), stopPendingIntent)
+            .addAction(R.drawable.ic_bell, context.getString(R.string.btn_snooze_10m), snoozePendingIntent)
             .setFullScreenIntent(fullScreenPendingIntent, true)
             .build()
 
@@ -208,10 +208,10 @@ class AlarmReceiver : BroadcastReceiver() {
     private fun createNotificationChannel(context: Context) {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Alarmes",
+            context.getString(R.string.notif_channel_alarms_name),
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
-            description = "Notifications d'alarme"
+            description = context.getString(R.string.notif_channel_alarms_desc)
             setBypassDnd(true)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }

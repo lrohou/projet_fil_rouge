@@ -1,20 +1,23 @@
 package com.example.filrouge.auth
 
+import android.app.Application
 import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.filrouge.R
 import kotlinx.coroutines.launch
 
 /**
  * ViewModel de l'écran de connexion.
  * Gère la validation des champs, l'état du chargement et les opérations de connexion / mot de passe oublié.
  */
-class LoginViewModel(
+class LoginViewModel @JvmOverloads constructor(
+    application: Application,
     private val repo: AuthRepository = AuthRepository()
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     var username by mutableStateOf("")
         private set
@@ -35,25 +38,27 @@ class LoginViewModel(
 
     /** Déclenche la tentative de connexion e-mail/mot de passe */
     fun signIn(onSuccess: () -> Unit) {
-        if (!emailValid()) { errorMessage = "Adresse e-mail invalide"; return }
-        if (password.length < 6) { errorMessage = "6 caractères minimum"; return }
+        val app = getApplication<Application>()
+        if (!emailValid()) { errorMessage = app.getString(R.string.error_invalid_email); return }
+        if (password.length < 6) { errorMessage = app.getString(R.string.error_password_too_short); return }
         viewModelScope.launch {
             isLoading = true
             repo.signIn(username.trim(), password)
                 .onSuccess { onSuccess() }
-                .onFailure { errorMessage = it.toAuthMessage() }
+                .onFailure { errorMessage = it.toAuthMessage(app) }
             isLoading = false
         }
     }
 
     /** Déclenche l'authentification avec Google */
     fun signInWithGoogle(idToken: String, onSuccess: () -> Unit) {
+        val app = getApplication<Application>()
         viewModelScope.launch {
             isLoading = true
             repo.signInWithGoogle(idToken)
                 .onSuccess { onSuccess() }
                 .onFailure {
-                    errorMessage = it.toAuthMessage()
+                    errorMessage = it.toAuthMessage(app)
                 }
             isLoading = false
         }
@@ -61,16 +66,17 @@ class LoginViewModel(
 
     /** Gère l'échec d'initialisation de Google Sign-In */
     fun onGoogleError() {
-        errorMessage = "Connexion Google impossible"
+        errorMessage = getApplication<Application>().getString(R.string.error_google_sign_in)
     }
 
     /** Envoie un e-mail de réinitialisation de mot de passe à l'adresse renseignée */
     fun resetPassword() {
-        if (!emailValid()) { errorMessage = "Entre ton e-mail pour réinitialiser"; return }
+        val app = getApplication<Application>()
+        if (!emailValid()) { errorMessage = app.getString(R.string.error_enter_email_to_reset); return }
         viewModelScope.launch {
             repo.resetPassword(username.trim())
-                .onSuccess { infoMessage = "E-mail de réinitialisation envoyé" }
-                .onFailure { errorMessage = it.toAuthMessage() }
+                .onSuccess { infoMessage = app.getString(R.string.info_reset_email_sent) }
+                .onFailure { errorMessage = it.toAuthMessage(app) }
         }
     }
 }

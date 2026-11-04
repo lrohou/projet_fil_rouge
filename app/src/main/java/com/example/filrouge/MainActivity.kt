@@ -1,7 +1,6 @@
 package com.example.filrouge
 
 import com.example.filrouge.auth.LoginViewModel
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -52,6 +52,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
@@ -75,7 +76,6 @@ val DarkThemeKey = booleanPreferencesKey("is_dark_theme")
  * et lance le composable de navigation globale.
  */
 class MainActivity : ComponentActivity() {
-    @SuppressLint("FlowOperatorInvokedInComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -83,9 +83,11 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
 
-            //lecture de la préférence du thème dans le DataStore
-            val isDarkTheme by context.dataStore.data.map { preferences ->
-                preferences[DarkThemeKey] ?: false
+            //lecture de la préférence du thème dans le DataStore (mémorisé pour éviter de recréer le Flow à chaque recomposition)
+            val isDarkTheme by remember(context) {
+                context.dataStore.data.map { preferences ->
+                    preferences[DarkThemeKey] ?: false
+                }
             }.collectAsState(initial = false)
 
             FilRougeTheme(darkTheme = isDarkTheme, dynamicColor = false) {
@@ -131,11 +133,11 @@ fun LoginForm(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Mon réveil social", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.login_app_title), fontSize = 28.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.size(48.dp))
         Image(
             painter = painterResource(id = R.drawable.logo),
-            contentDescription = "Logo de l'app",
+            contentDescription = stringResource(R.string.desc_app_logo),
             modifier = Modifier.clip(RoundedCornerShape(16.dp))
         )
 
@@ -146,7 +148,7 @@ fun LoginForm(
             onValueChange = onUsernameChange,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            placeholder = { Text("Enter Email Address") }
+            placeholder = { Text(stringResource(R.string.placeholder_email)) }
         )
 
         Spacer(Modifier.size(8.dp))
@@ -157,11 +159,11 @@ fun LoginForm(
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            placeholder = { Text("Enter Password") }
+            placeholder = { Text(stringResource(R.string.placeholder_password)) }
         )
 
         Text(
-            "Forgot your password?",
+            stringResource(R.string.forgot_password),
             fontSize = 10.sp,
             color = Color(100, 100, 100),
             textAlign = TextAlign.End,
@@ -183,7 +185,7 @@ fun LoginForm(
 
         Button(onClick = onClick, enabled = !isLoading, modifier = Modifier.fillMaxWidth()) {
             if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-            else Text("Sign In")
+            else Text(stringResource(R.string.sign_in))
         }
         Spacer(Modifier.size(8.dp))
 
@@ -192,14 +194,14 @@ fun LoginForm(
             enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Continuer avec Google")
+            Text(stringResource(R.string.continue_with_google))
         }
 
         Spacer(Modifier.size(72.dp))
 
         Text(
             buildAnnotatedString {
-                append("No account yet? ")
+                append(stringResource(R.string.no_account_yet))
                 withLink(
                     LinkAnnotation.Clickable(
                         tag = "signup",
@@ -207,9 +209,9 @@ fun LoginForm(
                         linkInteractionListener = { onSignUpClick() }
                     )
                 ) {
-                    append("Click here ")
+                    append(stringResource(R.string.click_here))
                 }
-                append("to sign up.")
+                append(stringResource(R.string.to_sign_up))
             },
             fontSize = 14.sp
         )

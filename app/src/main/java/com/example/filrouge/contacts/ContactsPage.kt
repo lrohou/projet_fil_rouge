@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,7 +68,7 @@ fun ContactsPageContent(
 
         //titre de la page
         Text(
-            text = "Contacts",
+            text = stringResource(R.string.contacts_title),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = textColor,
@@ -78,7 +79,7 @@ fun ContactsPageContent(
 
         if (contacts.isEmpty()) {
             Text(
-                text = "Aucun contact pour l'instant",
+                text = stringResource(R.string.no_contacts_yet),
                 color = textColor,
                 fontSize = 14.sp
             )
@@ -111,7 +112,7 @@ fun ContactsPageContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Nouveau\ncontact",
+                        text = stringResource(R.string.btn_new_contact),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = textColor
@@ -119,7 +120,7 @@ fun ContactsPageContent(
                     //icône + (même image que dans la liste de contacts)
                     Image(
                         painter = painterResource(id = R.drawable.plus),
-                        contentDescription = "Ajouter un contact",
+                        contentDescription = stringResource(R.string.cd_add_contact),
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -180,7 +181,7 @@ fun NewContactDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Nouveau contact",
+                        text = stringResource(R.string.new_contact_title),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = textColor
@@ -206,7 +207,7 @@ fun NewContactDialog(
                     onValueChange = { viewModel.onSearchQueryChange(it) },
                     placeholder = {
                         Text(
-                            text = "Rechercher un utilisateur...",
+                            text = stringResource(R.string.placeholder_search_user),
                             fontSize = 14.sp,
                             color = subTextColor
                         )
@@ -269,7 +270,7 @@ fun NewContactDialog(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = "Impossible de charger les utilisateurs",
+                                text = stringResource(R.string.error_load_users),
                                 color = Color.Red,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
@@ -288,7 +289,7 @@ fun NewContactDialog(
                                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Réessayer", color = Color.White)
+                                Text(stringResource(R.string.btn_retry), color = Color.White)
                             }
                         }
                     }
@@ -302,9 +303,9 @@ fun NewContactDialog(
                         ) {
                             Text(
                                 text = if (uiState.searchQuery.isBlank()) {
-                                    "Aucun autre utilisateur inscrit"
+                                    stringResource(R.string.no_other_users)
                                 } else {
-                                    "Aucun utilisateur trouvé pour \"${uiState.searchQuery}\""
+                                    stringResource(R.string.no_users_found_for_query, uiState.searchQuery)
                                 },
                                 color = subTextColor,
                                 fontSize = 14.sp
@@ -339,8 +340,8 @@ fun NewContactDialog(
                                         viewModel.sendFriendRequest(user.uid) { success ->
                                             Toast.makeText(
                                                 context,
-                                                if (success) "Demande d'ami envoyée à ${user.displayName}"
-                                                else "Impossible d'envoyer la demande",
+                                                if (success) context.getString(R.string.toast_friend_request_sent, user.displayName)
+                                                else context.getString(R.string.toast_friend_request_error),
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         }
@@ -399,7 +400,7 @@ fun UserSearchItem(
                 } else {
                     Image(
                         painter = painterResource(id = R.drawable.ic_person),
-                        contentDescription = "Avatar",
+                        contentDescription = stringResource(R.string.cd_avatar),
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -442,7 +443,7 @@ fun UserSearchItem(
                     colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                 ) {
-                    Text("Demande d'ami", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    Text(stringResource(R.string.btn_friend_request), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
 
                 FriendStatus.REQUEST_RECEIVED -> Button(
@@ -451,7 +452,7 @@ fun UserSearchItem(
                     colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                 ) {
-                    Text("Accepter", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    Text(stringResource(R.string.btn_accept), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
 
                 FriendStatus.REQUEST_SENT, FriendStatus.FRIEND -> OutlinedButton(
@@ -463,7 +464,7 @@ fun UserSearchItem(
                     )
                 ) {
                     Text(
-                        text = if (status == FriendStatus.FRIEND) "Ami ✓" else "Envoyée ✓",
+                        text = if (status == FriendStatus.FRIEND) stringResource(R.string.status_friend) else stringResource(R.string.status_sent),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -505,7 +506,7 @@ fun ContactCard(
             ) {
                 Image(
                     painter = painterResource(id = avatarIcon),
-                    contentDescription = "Avatar",
+                    contentDescription = stringResource(R.string.cd_avatar),
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -530,7 +531,7 @@ fun ContactCard(
             //icône horloge +
             Image(
                 painter = painterResource(id = R.drawable.plus),
-                contentDescription = "Ajouter alarme",
+                contentDescription = stringResource(R.string.cd_add_alarm_for_contact),
                 modifier = Modifier.size(40.dp)
             )
         }

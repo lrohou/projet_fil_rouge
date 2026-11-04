@@ -2,6 +2,7 @@ package com.example.filrouge.alarms
 
 import android.content.Context
 import android.util.Log
+import com.example.filrouge.R
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +34,7 @@ object SnoozeManager {
             .getString(KEY_USER_NAME, null)
         if (!saved.isNullOrBlank()) return saved
         return FirebaseAuth.getInstance()
-            .currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "Utilisateur"
+            .currentUser?.displayName?.takeIf { it.isNotBlank() } ?: context.getString(R.string.default_user_name)
     }
 
     /** Récupère le nombre de snoozes enregistrés pour une alarme spécifique */

@@ -1,5 +1,7 @@
 package com.example.filrouge.alarms
 
+import android.content.Context
+import com.example.filrouge.R
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
@@ -40,6 +42,29 @@ data class Alarm(
             return if (LocalTime.of(hour, minute).isAfter(LocalTime.now())) "aujourd'hui" else "demain"
         }
 
+    /** Résumé d'affichage avec Context pour récupérer les chaînes traduites depuis strings.xml */
+    fun getSubtitle(context: Context): String {
+        if (days.isNotEmpty()) {
+            val names = listOf(
+                context.getString(R.string.day_lun),
+                context.getString(R.string.day_mar),
+                context.getString(R.string.day_mer),
+                context.getString(R.string.day_jeu),
+                context.getString(R.string.day_ven),
+                context.getString(R.string.day_sam),
+                context.getString(R.string.day_dim)
+            )
+            return days.sorted().joinToString(", ") { names[it - 1] }
+        }
+        return if (LocalTime.of(hour, minute).isAfter(LocalTime.now())) {
+            context.getString(R.string.today)
+        } else {
+            context.getString(R.string.tomorrow)
+        }
+    }
+
     @get:Exclude
     val displayName: String get() = name.ifBlank { "Alarme" }
+
+    fun getDisplayName(context: Context): String = name.ifBlank { context.getString(R.string.default_alarm_name) }
 }

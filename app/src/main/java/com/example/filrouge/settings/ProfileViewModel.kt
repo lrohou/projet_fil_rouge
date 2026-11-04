@@ -1,8 +1,10 @@
 package com.example.filrouge.settings
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.filrouge.R
 import com.example.filrouge.alarms.AlarmRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,11 +21,12 @@ import java.util.TimeZone
  * (pseudo, email, fuseau horaire système et décompte des alarmes actives).
  * Prend en charge l'affichage du compte propre ou de celui d'un tiers.
  */
-class ProfileViewModel(
+class ProfileViewModel @JvmOverloads constructor(
+    application: Application,
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
     private val alarmRepo: AlarmRepository = AlarmRepository()
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(loadInitialState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -55,7 +58,7 @@ class ProfileViewModel(
                 userId = targetUserId,
                 displayName = "",
                 email = "",
-                timeZone = "Non renseigné",
+                timeZone = getApplication<Application>().getString(R.string.not_specified),
                 activeAlarmsCount = 0,
                 isCurrentUser = false,
                 isLoading = true
@@ -119,6 +122,7 @@ class ProfileViewModel(
 
     /** Écoute le profil d'un tiers dans Firestore */
     private fun listenToOtherUserProfile(targetUid: String) {
+        val app = getApplication<Application>()
         profileListener = db.collection("users").document(targetUid)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -128,9 +132,9 @@ class ProfileViewModel(
                 if (snapshot != null && snapshot.exists()) {
                     val name = snapshot.getString("displayName")?.takeIf { it.isNotBlank() }
                         ?: snapshot.getString("email")?.substringBefore("@")
-                        ?: "Utilisateur"
+                        ?: app.getString(R.string.default_user_name)
                     val email = snapshot.getString("email") ?: ""
-                    val tz = snapshot.getString("timeZone")?.takeIf { it.isNotBlank() } ?: "Non renseigné"
+                    val tz = snapshot.getString("timeZone")?.takeIf { it.isNotBlank() } ?: app.getString(R.string.not_specified)
 
                     _uiState.value = _uiState.value.copy(
                         displayName = name,

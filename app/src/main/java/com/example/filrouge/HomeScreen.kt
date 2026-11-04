@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -138,7 +139,7 @@ fun HomeScreen(
         AppNotification(
             id = req.friendshipId,
             title = req.from.displayName,
-            message = "souhaite devenir ami avec vous",
+            message = context.getString(R.string.notif_friend_request),
             type = NotificationType.FRIEND_REQUEST
         )
     }
@@ -147,7 +148,7 @@ fun HomeScreen(
         AppNotification(
             id = inv.id,
             title = inv.senderName,
-            message = "vous invite à l'alarme '${inv.displayName}' (${inv.formattedTime})",
+            message = context.getString(R.string.notif_alarm_invitation_format, inv.displayName, inv.formattedTime),
             type = NotificationType.ALARM_INVITATION,
             alarmInvitation = inv
         )
@@ -200,7 +201,7 @@ fun HomeScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.ic_person),
-                            contentDescription = "Profil",
+                            contentDescription = stringResource(R.string.cd_profile),
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -214,7 +215,7 @@ fun HomeScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.ic_bell),
-                            contentDescription = "Notifications",
+                            contentDescription = stringResource(R.string.cd_notifications),
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -309,7 +310,7 @@ fun BoxScope.NotificationDropdown(
         ) {
             if (notifications.isEmpty()) {
                 Text(
-                    text = "Aucune notification",
+                    text = stringResource(R.string.no_notifications),
                     color = Color.White,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -352,7 +353,7 @@ fun BoxScope.NotificationDropdown(
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.ic_check),
-                                    contentDescription = "Accepter",
+                                    contentDescription = stringResource(R.string.btn_accept),
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -364,7 +365,7 @@ fun BoxScope.NotificationDropdown(
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.ic_close),
-                                    contentDescription = "Refuser",
+                                    contentDescription = stringResource(R.string.btn_refuse),
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -412,7 +413,7 @@ fun BottomNavBar(
                 IconButton(onClick = { onPageSelected(0) }) {
                     Image(
                         painter = painterResource(id = R.drawable.group),
-                        contentDescription = "Contacts",
+                        contentDescription = stringResource(R.string.nav_contacts),
                         modifier = Modifier.size(if (currentPage == 0) 40.dp else 28.dp)
                     )
                 }
@@ -420,7 +421,7 @@ fun BottomNavBar(
                 IconButton(onClick = { onPageSelected(1) }) {
                     Image(
                         painter = painterResource(id = R.drawable.clock),
-                        contentDescription = "Alarmes",
+                        contentDescription = stringResource(R.string.nav_alarms),
                         modifier = Modifier.size(if (currentPage == 1) 40.dp else 28.dp)
                     )
                 }
@@ -428,7 +429,7 @@ fun BottomNavBar(
                 IconButton(onClick = { onPageSelected(2) }) {
                     Image(
                         painter = painterResource(id = R.drawable.settings),
-                        contentDescription = "Paramètres",
+                        contentDescription = stringResource(R.string.nav_settings),
                         modifier = Modifier.size(if (currentPage == 2) 40.dp else 28.dp)
                     )
                 }

@@ -9,9 +9,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.filrouge.R
 import com.example.filrouge.alarms.DarkBlue
 
 /**
@@ -44,7 +46,7 @@ fun SettingsPageContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Thème",
+                text = stringResource(R.string.settings_theme),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = textColor
@@ -60,7 +62,7 @@ fun SettingsPageContent(
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = "Clair",
+                    text = stringResource(R.string.settings_theme_light),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
@@ -77,7 +79,7 @@ fun SettingsPageContent(
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = "Sombre",
+                    text = stringResource(R.string.settings_theme_dark),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp

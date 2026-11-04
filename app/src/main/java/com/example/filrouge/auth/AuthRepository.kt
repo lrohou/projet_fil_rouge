@@ -1,5 +1,7 @@
 package com.example.filrouge.auth
 
+import android.content.Context
+import com.example.filrouge.R
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -64,12 +66,14 @@ class AuthRepository(
     fun signOut() = auth.signOut()
 }
 
-/** Extension traduisant les exceptions Firebase Auth en messages utilisateur en français */
-fun Throwable.toAuthMessage(): String = when (this) {
-    is FirebaseAuthWeakPasswordException -> "Mot de passe trop faible (6 caractères minimum)"
+/** Extension traduisant les exceptions Firebase Auth en identifiant de ressource string */
+fun Throwable.toAuthMessageResId(): Int = when (this) {
+    is FirebaseAuthWeakPasswordException -> R.string.error_auth_weak_password
     is FirebaseAuthInvalidUserException,
-    is FirebaseAuthInvalidCredentialsException -> "E-mail ou mot de passe incorrect"
-    is FirebaseAuthUserCollisionException -> "Un compte existe déjà avec cet e-mail"
-    is FirebaseNetworkException -> "Pas de connexion internet"
-    else -> "Une erreur est survenue, réessaie"
+    is FirebaseAuthInvalidCredentialsException -> R.string.error_auth_invalid_credentials
+    is FirebaseAuthUserCollisionException -> R.string.error_auth_user_collision
+    is FirebaseNetworkException -> R.string.error_auth_network
+    else -> R.string.error_auth_unknown
 }
+
+fun Throwable.toAuthMessage(context: Context): String = context.getString(toAuthMessageResId())

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -93,7 +94,7 @@ fun ProfileContent(
             ) {
                 TextButton(onClick = onBack) {
                     Text(
-                        text = "← Retour",
+                        text = stringResource(R.string.btn_back),
                         color = if (isDarkTheme) Color(0xFF90CAFF) else DarkBlue,
                         fontSize = 16.sp
                     )
@@ -120,7 +121,7 @@ fun ProfileContent(
                 } else {
                     Image(
                         painter = painterResource(id = R.drawable.ic_person),
-                        contentDescription = "Photo de profil",
+                        contentDescription = stringResource(R.string.cd_profile_photo),
                         modifier = Modifier.size(56.dp)
                     )
                 }
@@ -130,7 +131,7 @@ fun ProfileContent(
 
             // Nom et adresse e-mail
             Text(
-                text = uiState.displayName.ifBlank { "Utilisateur" },
+                text = uiState.displayName.ifBlank { stringResource(R.string.default_user_name) },
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = textColor
@@ -158,7 +159,7 @@ fun ProfileContent(
                     modifier = Modifier.padding(20.dp)
                 ) {
                     Text(
-                        text = "Informations",
+                        text = stringResource(R.string.profile_info_title),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = textColor
@@ -167,8 +168,8 @@ fun ProfileContent(
 
                     // Ligne nom
                     ProfileInfoRow(
-                        label = "Nom",
-                        value = uiState.displayName.ifBlank { "Non renseigné" },
+                        label = stringResource(R.string.profile_label_name),
+                        value = uiState.displayName.ifBlank { stringResource(R.string.not_specified) },
                         textColor = textColor
                     )
                     HorizontalDivider(
@@ -179,8 +180,8 @@ fun ProfileContent(
 
                     // Ligne email
                     ProfileInfoRow(
-                        label = "Email",
-                        value = uiState.email.ifBlank { "Non renseigné" },
+                        label = stringResource(R.string.profile_label_email),
+                        value = uiState.email.ifBlank { stringResource(R.string.not_specified) },
                         textColor = textColor
                     )
                     HorizontalDivider(
@@ -191,8 +192,8 @@ fun ProfileContent(
 
                     // Ligne fuseau horaire
                     ProfileInfoRow(
-                        label = "Fuseau horaire",
-                        value = uiState.timeZone,
+                        label = stringResource(R.string.profile_label_timezone),
+                        value = uiState.timeZone.ifBlank { stringResource(R.string.not_specified) },
                         textColor = textColor
                     )
                     HorizontalDivider(
@@ -203,7 +204,7 @@ fun ProfileContent(
 
                     // Ligne nombre d'alarmes actives
                     ProfileInfoRow(
-                        label = "Alarmes actives",
+                        label = stringResource(R.string.profile_label_active_alarms),
                         value = "${uiState.activeAlarmsCount}",
                         textColor = textColor
                     )
@@ -220,7 +221,7 @@ fun ProfileContent(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Se déconnecter",
+                        text = stringResource(R.string.btn_logout),
                         color = Color.White,
                         fontSize = 16.sp,
                         modifier = Modifier.padding(vertical = 8.dp)

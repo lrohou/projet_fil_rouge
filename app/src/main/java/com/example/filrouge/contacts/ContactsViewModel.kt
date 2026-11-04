@@ -1,8 +1,10 @@
 package com.example.filrouge.contacts
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.filrouge.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -16,11 +18,12 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel gérant la liste des utilisateurs, les recherches dynamiques et le statut des relations d'amitié.
  */
-class ContactsViewModel(
+class ContactsViewModel @JvmOverloads constructor(
+    application: Application,
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
     private val friendRepo: FriendRepository = FriendRepository()
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(ContactsUiState(isLoading = true))
     val uiState: StateFlow<ContactsUiState> = _uiState.asStateFlow()
@@ -52,13 +55,14 @@ class ContactsViewModel(
 
     /** Écoute en temps réel la collection des utilisateurs Firestore (hors utilisateur connecté) */
     fun listenToUsers() {
+        val app = getApplication<Application>()
         val currentUid = auth.currentUser?.uid
         Log.d("ContactsVM", "listenToUsers() called. currentUid: $currentUid")
 
         if (currentUid == null) {
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                error = "Utilisateur non connecté"
+                error = app.getString(R.string.error_user_not_connected)
             )
             return
         }
@@ -72,7 +76,7 @@ class ContactsViewModel(
                     Log.e("ContactsVM", "Erreur Firestore: ${error.message}", error)
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = error.localizedMessage ?: error.message ?: "Erreur de permissions Firestore"
+                        error = error.localizedMessage ?: error.message ?: app.getString(R.string.error_firestore_permissions)
                     )
                     return@addSnapshotListener
                 }
@@ -81,7 +85,7 @@ class ContactsViewModel(
                     val allUsers = snapshot.documents.mapNotNull { doc ->
                         val displayName = doc.getString("displayName")?.takeIf { it.isNotBlank() }
                             ?: doc.getString("email")?.substringBefore("@")
-                            ?: "Utilisateur"
+                            ?: app.getString(R.string.default_user_name)
                         AppUser(
                             uid = doc.id,
                             displayName = displayName,
@@ -112,6 +116,7 @@ class ContactsViewModel(
 
     /** Met à jour les sous-ensembles des demandes envoyées, reçues et amis confirmés */
     private fun updateFriendState() {
+        val app = getApplication<Application>()
         val me = auth.currentUser?.uid ?: return
         _uiState.update { state ->
             val sent = friendships
@@ -126,7 +131,7 @@ class ContactsViewModel(
                     FriendRequest(
                         friendshipId = f.id,
                         from = state.users.firstOrNull { it.uid == f.requesterId }
-                            ?: AppUser(uid = f.requesterId, displayName = "Utilisateur")
+                            ?: AppUser(uid = f.requesterId, displayName = app.getString(R.string.default_user_name))
                     )
                 }
             state.copy(friendRequestsSent = sent, friendIds = friends, incomingRequests = incoming)

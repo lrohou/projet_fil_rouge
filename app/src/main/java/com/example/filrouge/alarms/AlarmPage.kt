@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,8 +82,9 @@ val goofySounds = listOf(
 const val GOOFY_RANDOM = "goofy_random"
 
 //noms des sons
+@Composable
 fun soundDisplayName(name: String): String = when (name) {
-    GOOFY_RANDOM -> "🤪 Je suis complètement crazy"
+    GOOFY_RANDOM -> stringResource(R.string.sound_goofy_random)
     else -> name.replace("_", " ").replaceFirstChar { it.uppercase() }
 }
 
@@ -143,14 +145,14 @@ fun AlarmPageContent(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "⚠️ Affichage plein écran",
+                        text = stringResource(R.string.overlay_perm_title),
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = Color(0xFF856404)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Pour que le réveil prenne tout l'écran même quand vous êtes sur une autre application, autorisez l'affichage par-dessus.",
+                        text = stringResource(R.string.overlay_perm_desc),
                         fontSize = 12.sp,
                         color = Color(0xFF856404)
                     )
@@ -167,7 +169,7 @@ fun AlarmPageContent(
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
                     ) {
-                        Text("Autoriser l'affichage", fontSize = 12.sp, color = Color.White)
+                        Text(stringResource(R.string.btn_overlay_perm), fontSize = 12.sp, color = Color.White)
                     }
                 }
             }
@@ -189,7 +191,7 @@ fun AlarmPageContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Nouvelle\nAlarme",
+                    text = stringResource(R.string.btn_new_alarm),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = textColor,
@@ -204,7 +206,7 @@ fun AlarmPageContent(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.plus),
-                        contentDescription = "Ajouter une alarme",
+                        contentDescription = stringResource(R.string.cd_add_alarm),
                         modifier = Modifier.size(48.dp)
                     )
                 }
@@ -216,7 +218,7 @@ fun AlarmPageContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Alarmes en cours",
+            text = stringResource(R.string.alarms_in_progress),
             fontSize = 18.sp,
             fontWeight = FontWeight.Normal,
             color = textColor
@@ -225,7 +227,7 @@ fun AlarmPageContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         if (alarms.isEmpty()) {
-            Text("Aucune alarme pour l'instant", color = textColor, fontSize = 14.sp)
+            Text(stringResource(R.string.no_alarms_yet), color = textColor, fontSize = 14.sp)
         }
 
         alarms.forEach { alarm ->
@@ -258,6 +260,7 @@ fun AlarmCard(
     val timeBg = if (isDarkTheme) Color(0xFF2C3E50) else Color.White
     val timeTextColor = if (isDarkTheme) Color.White else Color.Black
     val subtitleColor = if (isDarkTheme) Color(0xFFCCCCCC) else Color.Black
+    val context = LocalContext.current
 
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -299,14 +302,14 @@ fun AlarmCard(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = alarm.subtitle,
+                    text = alarm.getSubtitle(context),
                     fontSize = 13.sp,
                     color = subtitleColor
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Supprimer", tint = subtitleColor)
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete), tint = subtitleColor)
                 }
                 Switch(checked = alarm.enabled, onCheckedChange = onToggle)
             }
@@ -326,7 +329,7 @@ fun AlarmEditDialog(
     onConfirm: (hour: Int, minute: Int, name: String, days: List<Int>, soundName: String, vibrate: Boolean, contacts: List<String>, discordWebhookUrl: String) -> Unit
 ) {
     val isEdit = existingAlarm != null
-    val dialogTitle = if (isEdit) "Modifier l'alarme" else "Nouvelle Alarme"
+    val dialogTitle = if (isEdit) stringResource(R.string.edit_alarm_title) else stringResource(R.string.new_alarm_title)
 
     val timeState = rememberTimePickerState(
         initialHour = existingAlarm?.hour ?: 7,
@@ -393,7 +396,7 @@ fun AlarmEditDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Nom de l'alarme") },
+                    label = { Text(stringResource(R.string.label_alarm_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -407,7 +410,7 @@ fun AlarmEditDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // jours de la semaine
-                Text("Jours de répétition", fontWeight = FontWeight.Medium, color = textColor, fontSize = 14.sp)
+                Text(stringResource(R.string.label_repeat_days), fontWeight = FontWeight.Medium, color = textColor, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 DaySelector(
                     selectedDays = selectedDays,
@@ -418,7 +421,7 @@ fun AlarmEditDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // sélection du son
-                Text("Son", fontWeight = FontWeight.Medium, color = textColor, fontSize = 14.sp)
+                Text(stringResource(R.string.label_sound), fontWeight = FontWeight.Medium, color = textColor, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(4.dp))
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -449,7 +452,7 @@ fun AlarmEditDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Vibreur", fontWeight = FontWeight.Medium, color = textColor, fontSize = 14.sp)
+                    Text(stringResource(R.string.label_vibrate), fontWeight = FontWeight.Medium, color = textColor, fontSize = 14.sp)
                     Switch(checked = vibrate, onCheckedChange = { vibrate = it })
                 }
 
@@ -459,8 +462,8 @@ fun AlarmEditDialog(
                 OutlinedTextField(
                     value = discordWebhookUrl,
                     onValueChange = { discordWebhookUrl = it },
-                    label = { Text("Webhook Discord (facultatif)") },
-                    placeholder = { Text("https://discord.com/api/webhooks/...") },
+                    label = { Text(stringResource(R.string.label_discord_webhook)) },
+                    placeholder = { Text(stringResource(R.string.placeholder_discord_webhook)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -472,13 +475,17 @@ fun AlarmEditDialog(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val countText = if (selectedContacts.isNotEmpty()) " (${selectedContacts.size})" else ""
                     Button(
                         onClick = { showContacts = true },
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Inviter des contacts$countText", color = Color.White)
+                        val text = if (selectedContacts.isNotEmpty()) {
+                            stringResource(R.string.btn_invite_contacts_count, selectedContacts.size)
+                        } else {
+                            stringResource(R.string.btn_invite_contacts)
+                        }
+                        Text(text, color = Color.White)
                     }
 
                 }
@@ -489,11 +496,11 @@ fun AlarmEditDialog(
                 onClick = { onConfirm(timeState.hour, timeState.minute, name, selectedDays, soundName, vibrate, selectedContacts, discordWebhookUrl) },
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                 shape = RoundedCornerShape(12.dp)
-            ) { Text(if (isEdit) "Enregistrer" else "Créer", color = Color.White) }
+            ) { Text(if (isEdit) stringResource(R.string.btn_save) else stringResource(R.string.btn_create), color = Color.White) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annuler", color = if (isDarkTheme) Color(0xFF90CAFF) else DarkBlue)
+                Text(stringResource(R.string.btn_cancel), color = if (isDarkTheme) Color(0xFF90CAFF) else DarkBlue)
             }
         }
     )
@@ -507,7 +514,15 @@ fun DaySelector(
     isDarkTheme: Boolean,
     onDaysChanged: (List<Int>) -> Unit
 ) {
-    val dayNames = listOf("L", "M", "M", "J", "V", "S", "D")
+    val dayNames = listOf(
+        stringResource(R.string.day_mon_short),
+        stringResource(R.string.day_tue_short),
+        stringResource(R.string.day_wed_short),
+        stringResource(R.string.day_thu_short),
+        stringResource(R.string.day_fri_short),
+        stringResource(R.string.day_sat_short),
+        stringResource(R.string.day_sun_short)
+    )
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -605,7 +620,7 @@ fun SoundPickerDialog(
         containerColor = dialogBg,
         shape = RoundedCornerShape(24.dp),
         title = {
-            Text("Choisir un son", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = textColor)
+            Text(stringResource(R.string.sound_picker_title), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = textColor)
         },
         text = {
             LazyColumn(
@@ -651,7 +666,7 @@ fun SoundPickerDialog(
                             ) {
                                 Icon(
                                     imageVector = if (isPlaying) Icons.Default.Close else Icons.Default.PlayArrow,
-                                    contentDescription = if (isPlaying) "Arrêter" else "Écouter",
+                                    contentDescription = if (isPlaying) stringResource(R.string.cd_stop_sound) else stringResource(R.string.cd_play_sound),
                                     tint = DarkBlue
                                 )
                             }
@@ -691,7 +706,7 @@ fun SoundPickerDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Fermer", color = if (isDarkTheme) Color(0xFF90CAFF) else DarkBlue)
+                Text(stringResource(R.string.btn_close), color = if (isDarkTheme) Color(0xFF90CAFF) else DarkBlue)
             }
         }
     )
@@ -713,12 +728,12 @@ fun ContactsPickerDialog(
         containerColor = dialogBg,
         shape = RoundedCornerShape(24.dp),
         title = {
-            Text("Inviter des contacts", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = textColor)
+            Text(stringResource(R.string.invite_contacts_dialog_title), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = textColor)
         },
         text = {
             if (contactsList.isEmpty()) {
                 Text(
-                    text = "Aucun contact disponible",
+                    text = stringResource(R.string.no_contacts_available),
                     color = textColor,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(vertical = 16.dp)
@@ -756,7 +771,7 @@ fun ContactsPickerDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Terminer", color = if (isDarkTheme) Color(0xFF90CAFF) else DarkBlue)
+                Text(stringResource(R.string.btn_finish), color = if (isDarkTheme) Color(0xFF90CAFF) else DarkBlue)
             }
         }
     )

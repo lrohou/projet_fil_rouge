@@ -1,20 +1,23 @@
 package com.example.filrouge.auth
 
+import android.app.Application
 import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.filrouge.R
 import kotlinx.coroutines.launch
 
 /**
  * ViewModel gérant la création de compte.
  * Valide la saisie des informations (pseudo, email, mot de passe) et communique avec le repository.
  */
-class SignUpViewModel(
+class SignUpViewModel @JvmOverloads constructor(
+    application: Application,
     private val repo: AuthRepository = AuthRepository()
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     var displayName by mutableStateOf("")
         private set
@@ -33,17 +36,18 @@ class SignUpViewModel(
 
     /** Valide le formulaire et exécute la création de compte */
     fun signUp(onSuccess: () -> Unit) {
-        if (displayName.isBlank()) { errorMessage = "Pseudo requis"; return }
+        val app = getApplication<Application>()
+        if (displayName.isBlank()) { errorMessage = app.getString(R.string.error_username_required); return }
         if (!Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()) {
-            errorMessage = "Adresse e-mail invalide"; return
+            errorMessage = app.getString(R.string.error_invalid_email); return
         }
-        if (password.length < 6) { errorMessage = "6 caractères minimum"; return }
+        if (password.length < 6) { errorMessage = app.getString(R.string.error_password_too_short); return }
 
         viewModelScope.launch {
             isLoading = true
             repo.signUp(displayName.trim(), email.trim(), password)
                 .onSuccess { onSuccess() }
-                .onFailure { errorMessage = it.toAuthMessage() }
+                .onFailure { errorMessage = it.toAuthMessage(app) }
             isLoading = false
         }
     }

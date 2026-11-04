@@ -1,3 +1,159 @@
 <resources>
     <string name="app_name">Fil Rouge</string>
+
+    <!-- General / Common -->
+    <string name="default_user_name">Utilisateur</string>
+    <string name="default_alarm_name">Alarme</string>
+    <string name="default_friend_name">Un ami</string>
+    <string name="not_specified">Non renseigné</string>
+    <string name="btn_close">Fermer</string>
+    <string name="btn_cancel">Annuler</string>
+    <string name="btn_save">Enregistrer</string>
+    <string name="btn_create">Créer</string>
+    <string name="btn_finish">Terminer</string>
+    <string name="btn_back">← Retour</string>
+    <string name="btn_retry">Réessayer</string>
+    <string name="btn_accept">Accepter</string>
+    <string name="btn_refuse">Refuser</string>
+
+    <!-- Auth / Login -->
+    <string name="login_app_title">Mon réveil social</string>
+    <string name="desc_app_logo">Logo de l\'app</string>
+    <string name="placeholder_email">Enter Email Address</string>
+    <string name="placeholder_password">Enter Password</string>
+    <string name="forgot_password">Forgot your password?</string>
+    <string name="sign_in">Sign In</string>
+    <string name="continue_with_google">Continuer avec Google</string>
+    <string name="no_account_yet">No account yet? </string>
+    <string name="click_here">Click here </string>
+    <string name="to_sign_up">to sign up.</string>
+
+    <!-- Auth / Sign Up -->
+    <string name="create_account_title">Créer un compte</string>
+    <string name="placeholder_username">Pseudo</string>
+    <string name="placeholder_signup_email">Adresse e-mail</string>
+    <string name="placeholder_signup_password">Mot de passe</string>
+    <string name="btn_create_account">Créer mon compte</string>
+    <string name="already_have_account">Déjà un compte ? Se connecter</string>
+
+    <!-- Auth / Error and Info Messages -->
+    <string name="error_invalid_email">Adresse e-mail invalide</string>
+    <string name="error_password_too_short">6 caractères minimum</string>
+    <string name="error_username_required">Pseudo requis</string>
+    <string name="error_google_sign_in">Connexion Google impossible</string>
+    <string name="error_enter_email_to_reset">Entre ton e-mail pour réinitialiser</string>
+    <string name="info_reset_email_sent">E-mail de réinitialisation envoyé</string>
+    <string name="error_auth_weak_password">Mot de passe trop faible (6 caractères minimum)</string>
+    <string name="error_auth_invalid_credentials">E-mail ou mot de passe incorrect</string>
+    <string name="error_auth_user_collision">Un compte existe déjà avec cet e-mail</string>
+    <string name="error_auth_network">Pas de connexion internet</string>
+    <string name="error_auth_unknown">Une erreur est survenue, réessaie</string>
+    <string name="error_user_not_connected">Utilisateur non connecté</string>
+    <string name="error_firestore_permissions">Erreur de permissions Firestore</string>
+
+    <!-- Navigation -->
+    <string name="nav_contacts">Contacts</string>
+    <string name="nav_alarms">Alarmes</string>
+    <string name="nav_settings">Paramètres</string>
+
+    <!-- Notifications Header &amp; Dropdown -->
+    <string name="cd_profile">Profil</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="no_notifications">Aucune notification</string>
+    <string name="notif_friend_request">souhaite devenir ami avec vous</string>
+    <string name="notif_alarm_invitation_format">vous invite à l\'alarme \'%1$s\' (%2$s)</string>
+
+    <!-- Alarms Page -->
+    <string name="overlay_perm_title">⚠️ Affichage plein écran</string>
+    <string name="overlay_perm_desc">Pour que le réveil prenne tout l\'écran même quand vous êtes sur une autre application, autorisez l\'affichage par-dessus.</string>
+    <string name="btn_overlay_perm">Autoriser l\'affichage</string>
+    <string name="btn_new_alarm">Nouvelle\nAlarme</string>
+    <string name="cd_add_alarm">Ajouter une alarme</string>
+    <string name="alarms_in_progress">Alarmes en cours</string>
+    <string name="no_alarms_yet">Aucune alarme pour l\'instant</string>
+    <string name="cd_delete">Supprimer</string>
+
+    <!-- Alarm Edit / Create Dialog -->
+    <string name="new_alarm_title">Nouvelle Alarme</string>
+    <string name="edit_alarm_title">Modifier l\'alarme</string>
+    <string name="label_alarm_name">Nom de l\'alarme</string>
+    <string name="label_repeat_days">Jours de répétition</string>
+    <string name="label_sound">Son</string>
+    <string name="label_vibrate">Vibreur</string>
+    <string name="label_discord_webhook">Webhook Discord (facultatif)</string>
+    <string name="placeholder_discord_webhook">https://discord.com/api/webhooks/...</string>
+    <string name="btn_invite_contacts">Inviter des contacts</string>
+    <string name="btn_invite_contacts_count">Inviter des contacts (%1$d)</string>
+
+    <!-- Day letters for selector -->
+    <string name="day_mon_short">L</string>
+    <string name="day_tue_short">M</string>
+    <string name="day_wed_short">M</string>
+    <string name="day_thu_short">J</string>
+    <string name="day_fri_short">V</string>
+    <string name="day_sat_short">S</string>
+    <string name="day_sun_short">D</string>
+
+    <!-- Day names for subtitle -->
+    <string name="day_lun">Lun</string>
+    <string name="day_mar">Mar</string>
+    <string name="day_mer">Mer</string>
+    <string name="day_jeu">Jeu</string>
+    <string name="day_ven">Ven</string>
+    <string name="day_sam">Sam</string>
+    <string name="day_dim">Dim</string>
+    <string name="today">aujourd\'hui</string>
+    <string name="tomorrow">demain</string>
+
+    <!-- Sound Picker -->
+    <string name="sound_picker_title">Choisir un son</string>
+    <string name="cd_stop_sound">Arrêter</string>
+    <string name="cd_play_sound">Écouter</string>
+    <string name="sound_goofy_random">🤪 Je suis complètement crazy</string>
+
+    <!-- Contacts Picker Dialog (in Alarm edit) -->
+    <string name="invite_contacts_dialog_title">Inviter des contacts</string>
+    <string name="no_contacts_available">Aucun contact disponible</string>
+
+    <!-- Alarm Ring &amp; Receiver -->
+    <string name="toast_alarm_snoozed">Alarme reportée de 10 min (Retard estimé : %1$d min)</string>
+    <string name="alarm_time_is_up">Il est l\'heure !</string>
+    <string name="alarm_delay_estimate">⏱️ Retard estimé : %1$d min (Snooze x%2$d)</string>
+    <string name="btn_turn_off">Éteindre</string>
+    <string name="btn_snooze_10m">Snooze (+10 min)</string>
+    <string name="notif_alarm_tap_to_dismiss">Appuyez pour éteindre</string>
+    <string name="notif_channel_alarms_name">Alarmes</string>
+    <string name="notif_channel_alarms_desc">Notifications d\'alarme</string>
+
+    <!-- Contacts Page -->
+    <string name="contacts_title">Contacts</string>
+    <string name="no_contacts_yet">Aucun contact pour l\'instant</string>
+    <string name="btn_new_contact">Nouveau\ncontact</string>
+    <string name="cd_add_contact">Ajouter un contact</string>
+    <string name="new_contact_title">Nouveau contact</string>
+    <string name="placeholder_search_user">Rechercher un utilisateur...</string>
+    <string name="error_load_users">Impossible de charger les utilisateurs</string>
+    <string name="no_other_users">Aucun autre utilisateur inscrit</string>
+    <string name="no_users_found_for_query">Aucun utilisateur trouvé pour \"%1$s\"</string>
+    <string name="toast_friend_request_sent">Demande d\'ami envoyée à %1$s</string>
+    <string name="toast_friend_request_error">Impossible d\'envoyer la demande</string>
+    <string name="cd_avatar">Avatar</string>
+    <string name="btn_friend_request">Demande d\'ami</string>
+    <string name="status_friend">Ami ✓</string>
+    <string name="status_sent">Envoyée ✓</string>
+    <string name="cd_add_alarm_for_contact">Ajouter alarme</string>
+
+    <!-- Settings Page -->
+    <string name="settings_theme">Thème</string>
+    <string name="settings_theme_light">Clair</string>
+    <string name="settings_theme_dark">Sombre</string>
+
+    <!-- Profile Screen -->
+    <string name="cd_profile_photo">Photo de profil</string>
+    <string name="profile_info_title">Informations</string>
+    <string name="profile_label_name">Nom</string>
+    <string name="profile_label_email">Email</string>
+    <string name="profile_label_timezone">Fuseau horaire</string>
+    <string name="profile_label_active_alarms">Alarmes actives</string>
+    <string name="btn_logout">Se déconnecter</string>
 </resources>
