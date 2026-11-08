@@ -65,6 +65,7 @@ val availableSounds = listOf(
     "early_riser",
     "earth_day",
     "happy_day",
+    "john_pork",
     "melodic_bones",
     "ping",
     "slow_morning"
@@ -85,6 +86,7 @@ const val GOOFY_RANDOM = "goofy_random"
 @Composable
 fun soundDisplayName(name: String): String = when (name) {
     GOOFY_RANDOM -> stringResource(R.string.sound_goofy_random)
+    "john_pork" -> stringResource(R.string.sound_john_pork)
     else -> name.replace("_", " ").replaceFirstChar { it.uppercase() }
 }
 

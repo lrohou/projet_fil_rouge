@@ -9,16 +9,25 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,12 +41,13 @@ import com.example.filrouge.ui.theme.FilRougeTheme
 /**
  * Activité plein écran qui s'affiche au-dessus du lockscreen lorsque l'alarme sonne.
  * Configure la fenêtre pour déverrouiller l'écran et propose les boutons d'arrêt et de snooze.
+ * Supporte le template spécial "John Pork" lorsque ce son est sélectionné.
  */
 class AlarmRingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //plein écran
+        // Plein écran
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.systemBarsBehavior =
@@ -72,60 +82,198 @@ class AlarmRingActivity : ComponentActivity() {
 
         val snoozeCount = SnoozeManager.getSnoozeCount(this, alarmId)
 
+        val onDismissAction: () -> Unit = {
+            //arrêt du réveil
+            AlarmReceiver.stopAlarm()
+            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            nm.cancel(AlarmReceiver.NOTIFICATION_ID)
+            AlarmViewModel.cancelSnooze(this, alarmId)
+            SnoozeManager.resetSnoozeCount(this, alarmId)
+            finish()
+        }
+
+        val onSnoozeAction: () -> Unit = {
+            //report d'alarme
+            AlarmReceiver.stopAlarm()
+            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            nm.cancel(AlarmReceiver.NOTIFICATION_ID)
+
+            val newCount = SnoozeManager.incrementSnoozeCount(this, alarmId)
+            val retardMinutes = newCount * 10
+
+            //envoyer la notification Discord
+            val userName = SnoozeManager.getUserName(this)
+            SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount, alarmWebhookUrl)
+
+            //programmation du snooze
+            AlarmViewModel.scheduleSnooze(
+                context = this,
+                alarmId = alarmId,
+                name = alarmName,
+                soundName = soundName,
+                vibrate = shouldVibrate,
+                minutesLater = 10,
+                discordWebhookUrl = alarmWebhookUrl
+            )
+
+            Toast.makeText(
+                this,
+                getString(R.string.toast_alarm_snoozed, retardMinutes),
+                Toast.LENGTH_SHORT
+            ).show()
+
+            finish()
+        }
+
         setContent {
             FilRougeTheme(darkTheme = true, dynamicColor = false) {
-                AlarmRingScreen(
-                    alarmName = alarmName,
-                    snoozeCount = snoozeCount,
-                    onDismiss = {
-                        // Arrêt complet du réveil
-                        AlarmReceiver.stopAlarm()
-                        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                        nm.cancel(AlarmReceiver.NOTIFICATION_ID)
-                        AlarmViewModel.cancelSnooze(this, alarmId)
-                        SnoozeManager.resetSnoozeCount(this, alarmId)
-                        finish()
-                    },
-                    onSnooze = {
-                        // Action de report d'alarme
-                        AlarmReceiver.stopAlarm()
-                        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                        nm.cancel(AlarmReceiver.NOTIFICATION_ID)
+                if (soundName == "john_pork") {
+                    JohnPorkRingScreen(
+                        onDismiss = onDismissAction,
+                        onSnooze = onSnoozeAction
+                    )
+                } else {
+                    AlarmRingScreen(
+                        alarmName = alarmName,
+                        snoozeCount = snoozeCount,
+                        onDismiss = onDismissAction,
+                        onSnooze = onSnoozeAction
+                    )
+                }
+            }
+        }
+    }
+}
 
-                        val newCount = SnoozeManager.incrementSnoozeCount(this, alarmId)
-                        val retardMinutes = newCount * 10
 
-                        // Envoyer la notification Discord
-                        val userName = SnoozeManager.getUserName(this)
-                        SnoozeManager.sendDiscordSnoozeNotification(userName, alarmName, newCount, alarmWebhookUrl)
+@Composable
+fun JohnPorkRingScreen(
+    onDismiss: () -> Unit,
+    onSnooze: () -> Unit
+) {
+    val textShadow = Shadow(
+        color = Color.Black.copy(alpha = 0.6f),
+        offset = Offset(2f, 2f),
+        blurRadius = 8f
+    )
 
-                        // Programmation du snooze
-                        AlarmViewModel.scheduleSnooze(
-                            context = this,
-                            alarmId = alarmId,
-                            name = alarmName,
-                            soundName = soundName,
-                            vibrate = shouldVibrate,
-                            minutesLater = 10,
-                            discordWebhookUrl = alarmWebhookUrl
-                        )
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        //image John Pork
+        Image(
+            painter = painterResource(id = R.drawable.john_pork_template),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
 
-                        Toast.makeText(
-                            this,
-                            getString(R.string.toast_alarm_snoozed, retardMinutes),
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        finish()
-                    }
+        //conteneur principal
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(vertical = 48.dp, horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // haut "John Pork is calling..."
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.john_pork_title),
+                    fontSize = 42.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    style = TextStyle(shadow = textShadow),
+                    textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.john_pork_is_calling),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White.copy(alpha = 0.9f),
+                    style = TextStyle(shadow = textShadow),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            //boutons "Decline" (Snooze) et "Accept" (Éteindre)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                //bouton rouge Decline (Snooze)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFF3B30))
+                            .clickable(onClick = onSnooze),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_call_end),
+                            contentDescription = stringResource(R.string.call_decline),
+                            tint = Color.White,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = stringResource(R.string.call_decline),
+                        color = Color.White,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Medium,
+                        style = TextStyle(shadow = textShadow)
+                    )
+                }
+
+                //bouton vert : Accept (Stop / Éteindre)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF34C759))
+                            .clickable(onClick = onDismiss),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_call),
+                            contentDescription = stringResource(R.string.call_accept),
+                            tint = Color.White,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = stringResource(R.string.call_accept),
+                        color = Color.White,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Medium,
+                        style = TextStyle(shadow = textShadow)
+                    )
+                }
             }
         }
     }
 }
 
 /**
- * Interface Compose affichée lorsque le réveil sonne.
+ * Interface Compose affichée lorsque le réveil sonne (template classique).
  * Affiche le nom de l'alarme, le compteur de snooze/retard et les boutons Éteindre / Snooze.
  */
 @Composable
@@ -152,7 +300,6 @@ fun AlarmRingScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(32.dp)
         ) {
-            //icone alarme
             Text("⏰", fontSize = 72.sp)
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -173,7 +320,6 @@ fun AlarmRingScreen(
                 color = Color(0xFFB0C4DE)
             )
 
-            //retard estimé si l'alarme a déjà été snoozée
             if (snoozeCount > 0) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Surface(
@@ -193,7 +339,6 @@ fun AlarmRingScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            //bouton éteindre
             Button(
                 onClick = onDismiss,
                 modifier = Modifier
@@ -214,7 +359,6 @@ fun AlarmRingScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            //bouton snooze
             Button(
                 onClick = onSnooze,
                 modifier = Modifier
