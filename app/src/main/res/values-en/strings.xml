@@ -109,7 +109,12 @@
     <string name="sound_picker_title">Choose a sound</string>
     <string name="cd_stop_sound">Stop</string>
     <string name="cd_play_sound">Play</string>
-    <string name="sound_goofy_random">🤪 I am completely crazy</string>
+    <string name="sound_goofy_random">I am completely crazy</string>
+    <string name="sound_john_pork">John Pork</string>
+    <string name="john_pork_title">John Pork</string>
+    <string name="john_pork_is_calling">is calling...</string>
+    <string name="call_decline">Decline</string>
+    <string name="call_accept">Accept</string>
 
     <!-- Contacts Picker Dialog (in Alarm edit) -->
     <string name="invite_contacts_dialog_title">Invite contacts</string>
@@ -139,8 +144,8 @@
     <string name="toast_friend_request_error">Unable to send the request</string>
     <string name="cd_avatar">Avatar</string>
     <string name="btn_friend_request">Friend request</string>
-    <string name="status_friend">Friend 👋"</string>
-    <string name="status_sent">Sent 👋"</string>
+    <string name="status_friend">Friend 👋</string>
+    <string name="status_sent">Sent 👋</string>
     <string name="cd_add_alarm_for_contact">Add alarm</string>
 
     <!-- Settings Page -->
